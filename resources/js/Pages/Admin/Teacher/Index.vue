@@ -6,6 +6,7 @@ import {
   mdiSquareEditOutline,
   mdiTrashCan,
   mdiAlertBoxOutline,
+  mdiEye,
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
@@ -151,6 +152,12 @@ function destroy(id) {
                 class="before:hidden lg:w-1 whitespace-nowrap"
               >
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
+                  <BaseButton
+                    :route-name="route('admin.teacher.show', teacher.id)"
+                    color="success"
+                    :icon="mdiEye"
+                    small
+                  />
                   <BaseButton
                     v-if="can.edit"
                     :route-name="route('admin.teacher.edit', teacher.id)"

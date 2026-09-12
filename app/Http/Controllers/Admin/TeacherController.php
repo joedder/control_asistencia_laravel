@@ -89,4 +89,17 @@ class TeacherController extends Controller
                              ->with('error', 'No se pudo crear el profesor. Intenta de nuevo.');
         }
     }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Teacher $teacher)
+    {
+        // Cargar el usuario asociado si existe
+        $teacher->load('user');
+
+        return Inertia::render('Admin/Teacher/Show', [
+            'teacher' => $teacher,
+        ]);
+    }
 }
