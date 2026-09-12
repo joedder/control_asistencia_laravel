@@ -143,4 +143,23 @@ class TeacherController extends Controller
                              ->with('error', 'No se pudo actualizar el profesor. Intenta de nuevo.');
         }
     }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Teacher $teacher)
+    {
+        try {
+            $teacher->delete();
+
+            return redirect()->route('admin.teacher.index')
+                             ->with('message', 'Teacher deleted successfully.');
+
+        } catch (Throwable $e) {
+            report($e);
+            
+            return redirect()->route('admin.teacher.index')
+                             ->with('error', 'No se pudo eliminar el profesor. Intenta de nuevo.');
+        }
+    }
 }
