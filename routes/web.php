@@ -22,6 +22,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rutas para Teachers (Patrón Index Inertia)
+    Route::prefix('teachers')
+        ->name('teacher.')
+        // ->middleware('permission:manage-teachers') // Descomenta si usas Spatie Permissions
+        ->group(function () {
+            Route::controller(\App\Http\Controllers\TeacherController::class)->group(function () {
+                Route::get('/',       'index')  ->name('index');
+                // Route::post('/',      'store')  ->name('store');
+                // Route::put('/{id}',   'update') ->name('update');
+                // Route::delete('/{id}','destroy')->name('destroy');
+            });
+        });
 });
 
 require __DIR__.'/auth.php';
