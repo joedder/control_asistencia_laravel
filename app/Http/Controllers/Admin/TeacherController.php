@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Throwable;
 
+use App\Http\Requests\Admin\StoreTeacherRequest;
+use App\Models\User;
+
 class TeacherController extends Controller
 {
     /**
@@ -49,6 +52,34 @@ class TeacherController extends Controller
                 'filters'  => $request->only(['search', 'name', 'last_name', 'identity_id', 'english_level']),
                 'error'    => 'No se pudieron cargar los profesores. Intenta de nuevo.',
             ]);
+        }
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return Inertia::render('Admin/Teacher/Create');
+    }
+
+    public function store(StoreTeacherRequest $request)
+    {
+        try {
+            // El request ya viene validado gracias a StoreTeacherRequest
+            Teacher::create($request->validated());
+
+            // Retornar a la lista con un mensaje flash de éxito
+            return redirect()->route('admin.teacher.index')
+                             ->with('message', 'Teacher created successfully.');
+
+        } catch (Throwable $e) {
+            // Fallback seguro: capturamos el error y retornamos a la vista con el mensaje
+            report($e);
+            
+            return redirect()->back()
+                             ->withInput()
+                             ->with('error', 'No se pudo crear el profesor. Intenta de nuevo.');
         }
     }
 }
