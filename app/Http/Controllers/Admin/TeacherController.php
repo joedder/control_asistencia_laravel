@@ -60,7 +60,14 @@ class TeacherController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Teacher/Create');
+        // Obtener usuarios que NO tienen un registro en teachers
+        $users = User::whereNotIn('id', function($query) {
+            $query->select('id_user')->from('teachers')->whereNotNull('id_user');
+        })->pluck('name', 'id')->toArray();
+
+        return Inertia::render('Admin/Teacher/Create', [
+            'users' => $users,
+        ]);
     }
 
     public function store(StoreTeacherRequest $request)
