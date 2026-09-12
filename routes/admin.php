@@ -14,6 +14,7 @@ Route::group([
         return Inertia::render('Admin/Dashboard');
     })->name('dashboard');    
     Route::resource('user', 'UserController');
+    Route::resource('teacher', 'TeacherController');
     Route::resource('role', 'RoleController');
     Route::resource('permission', 'PermissionController');
     Route::resource('menu', 'MenuController')->except([

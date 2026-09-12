@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,35 +22,30 @@ class TeacherController extends Controller
 
         try {
             // 2. Definir la consulta base
-            // Como tu tabla no usa SoftDeletes, no necesitamos el match() para 'deleted' o 'all'
             $query = Teacher::query();
 
             // 3. Encadenar: filtros de búsqueda → ordenamiento → paginación
             $teachers = $query
-                ->filter($request)          // scopeFilter del Model
+                ->filter($request)
                 ->orderBy($sortBy, $sortDir)
                 ->paginate($perPage)
-                ->withQueryString();        // conserva todos los ?params en los links
+                ->withQueryString();
 
-            // 4. Pasar datos + estado de UI a Inertia
-            return Inertia::render('Teachers/Index', [
+            // 4. Pasar datos a Inertia
+            return Inertia::render('Admin/Teacher/Index', [
                 'teachers' => $teachers,
-                'sort_by'  => $sortBy,
-                'sort_dir' => $sortDir,
-                'per_page' => $perPage,
-                // Puedes añadir el filtro de english_level u otros si los mantienes en el estado de Vue
-                'filters'  => $request->only(['search', 'name', 'last_name', 'identity_id', 'english_level'])
+                'filters'  => $request->only(['search', 'name', 'last_name', 'identity_id', 'english_level']),
+                'can' => [
+                    'create' => true,
+                    'edit' => true,
+                    'delete' => true,
+                ]
             ]);
 
         } catch (Throwable $e) {
-            // 5. Fallback seguro: la página se renderiza aunque falle la query
             report($e);
-            
-            return Inertia::render('Teachers/Index', [
+            return Inertia::render('Admin/Teacher/Index', [
                 'teachers' => null,
-                'sort_by'  => $sortBy,
-                'sort_dir' => $sortDir,
-                'per_page' => $perPage,
                 'filters'  => $request->only(['search', 'name', 'last_name', 'identity_id', 'english_level']),
                 'error'    => 'No se pudieron cargar los profesores. Intenta de nuevo.',
             ]);
