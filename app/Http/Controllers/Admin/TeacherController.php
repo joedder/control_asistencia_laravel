@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use Throwable;
 
 use App\Http\Requests\Admin\StoreTeacherRequest;
+use App\Http\Requests\Admin\UpdateTeacherRequest;
 use App\Models\User;
 
 class TeacherController extends Controller
@@ -101,5 +102,45 @@ class TeacherController extends Controller
         return Inertia::render('Admin/Teacher/Show', [
             'teacher' => $teacher,
         ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Teacher $teacher)
+    {
+        // Obtener usuarios que NO tienen un registro en teachers, EXCEPTO el usuario actual de este profesor
+        $users = User::whereNotIn('id', function($query) use ($teacher) {
+            $query->select('id_user')
+                  ->from('teachers')
+                  ->whereNotNull('id_user')
+                  ->where('id', '!=', $teacher->id); // Ignorar el registro actual
+        })->pluck('name', 'id')->toArray();
+
+        return Inertia::render('Admin/Teacher/Edit', [
+            'teacher' => $teacher,
+            'users' => $users,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateTeacherRequest $request, Teacher $teacher)
+    {
+        try {
+            // Actualizamos los datos
+            $teacher->update($request->validated());
+
+            return redirect()->route('admin.teacher.index')
+                             ->with('message', 'Teacher updated successfully.');
+
+        } catch (Throwable $e) {
+            report($e);
+            
+            return redirect()->back()
+                             ->withInput()
+                             ->with('error', 'No se pudo actualizar el profesor. Intenta de nuevo.');
+        }
     }
 }
