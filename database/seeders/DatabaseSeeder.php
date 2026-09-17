@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             CategoryGroupMenuSeeder::class,
             LevelMenuSeeder::class,
             GroupMenuSeeder::class,
+            StudentMenuSeeder::class,
         ]);
     }
 }
