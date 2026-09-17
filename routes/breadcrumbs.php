@@ -69,6 +69,7 @@ Breadcrumbs::resource('admin.user', 'Users');
 Breadcrumbs::resource('admin.teacher', 'Teachers');
 Breadcrumbs::resource('admin.category-group', 'Category Groups');
 Breadcrumbs::resource('admin.level', 'Levels');
+Breadcrumbs::resource('admin.group', 'Groups');
 Breadcrumbs::resource('admin.media', 'Media');
 Breadcrumbs::resource('admin.menu', 'Menu');
 Breadcrumbs::resource('admin.menu.item', 'Menu Items', 'admin.menu');
