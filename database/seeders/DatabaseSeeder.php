@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             LevelMenuSeeder::class,
             GroupMenuSeeder::class,
             StudentMenuSeeder::class,
+            AttendingMenuSeeder::class,
         ]);
     }
 }

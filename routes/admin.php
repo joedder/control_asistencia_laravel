@@ -19,6 +19,7 @@ Route::group([
     Route::resource('level', 'LevelController');
     Route::resource('group', 'GroupController');
     Route::resource('student', 'StudentController');
+    Route::resource('attending', 'AttendingController');
     Route::resource('role', 'RoleController');
     Route::resource('permission', 'PermissionController');
     Route::resource('menu', 'MenuController')->except([
