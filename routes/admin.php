@@ -15,6 +15,8 @@ Route::group([
     })->name('dashboard');    
     Route::resource('user', 'UserController');
     Route::resource('teacher', 'TeacherController');
+    Route::resource('category-group', 'CategoryGroupController');
+    Route::resource('level', 'LevelController');
     Route::resource('role', 'RoleController');
     Route::resource('permission', 'PermissionController');
     Route::resource('menu', 'MenuController')->except([
