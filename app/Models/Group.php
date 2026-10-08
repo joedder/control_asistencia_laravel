@@ -47,6 +47,14 @@ class Group extends Model
     }
 
     /**
+     * Get the students associated with the group.
+     */
+    public function students(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Student::class, 'id_group');
+    }
+
+    /**
      * Scope a query to apply filters from the request.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query

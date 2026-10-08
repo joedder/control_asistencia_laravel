@@ -92,7 +92,7 @@ class GroupController extends Controller
      */
     public function show(Group $group)
     {
-        $group->load(['teacher', 'categoryGroup', 'level']);
+        $group->load(['teacher', 'categoryGroup', 'level', 'students']);
 
         return Inertia::render('Admin/Group/Show', [
             'group' => $group,
