@@ -22,7 +22,8 @@ class UpdateHistoryMovementRequest extends FormRequest
         return [
             'id_group' => ['required', 'integer', 'exists:groups,id'],
             'id_new_group' => ['required', 'integer', 'exists:groups,id', 'different:id_group'],
-            'id_student' => ['required', 'integer', 'exists:students,id'],
+            'students' => ['required', 'array', 'min:1'],
+            'students.*' => ['integer', 'exists:students,id'],
             'migrated' => ['boolean'],
         ];
     }

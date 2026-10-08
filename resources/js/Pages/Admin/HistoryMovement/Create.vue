@@ -145,16 +145,28 @@ const toggleStudent = (studentId) => {
                   <th class="p-4 border-b">ID</th>
                   <th class="p-4 border-b">Student Name</th>
                   <th class="p-4 border-b">Identity ID</th>
+                  <th class="p-4 border-b">Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="student in allStudentsInGroup" :key="student.id" class="border-b hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer" @click="toggleStudent(student.id)">
+                <tr v-for="student in allStudentsInGroup" :key="student.id" 
+                    class="border-b" 
+                    :class="{ 'hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer': !student.has_pending_migration, 'bg-gray-100 dark:bg-slate-900 opacity-60 cursor-not-allowed': student.has_pending_migration }"
+                    @click="!student.has_pending_migration && toggleStudent(student.id)">
                   <td class="p-4 text-center">
-                    <input type="checkbox" :checked="form.students.includes(student.id)" @change.stop="toggleStudent(student.id)" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <input type="checkbox" :disabled="student.has_pending_migration" :checked="form.students.includes(student.id)" @change.stop="!student.has_pending_migration && toggleStudent(student.id)" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50">
                   </td>
                   <td class="p-4">{{ student.id }}</td>
                   <td class="p-4">{{ student.name }} {{ student.last_name || '' }}</td>
                   <td class="p-4">{{ student.identity_id }}</td>
+                  <td class="p-4">
+                    <span v-if="student.has_pending_migration" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      Pending Migration
+                    </span>
+                    <span v-else class="text-gray-500 text-xs">
+                      Available
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>

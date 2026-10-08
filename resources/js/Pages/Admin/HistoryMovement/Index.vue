@@ -152,7 +152,7 @@ function destroy(id) {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Student</th>
+              <th>Total Students</th>
               <th>From Group</th>
               <th>To Group</th>
               <th>Migrated</th>
@@ -166,8 +166,8 @@ function destroy(id) {
               <td data-label="ID">
                 {{ movement.id }}
               </td>
-              <td data-label="Student">
-                {{ movement.student?.name }} {{ movement.student?.last_name || '' }}
+              <td data-label="Total Students">
+                {{ movement.student_count }}
               </td>
               <td data-label="From Group">
                 {{ movement.group?.name }}

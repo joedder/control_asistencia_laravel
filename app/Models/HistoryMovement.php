@@ -16,6 +16,7 @@ class HistoryMovement extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'batch_id',
         'id_student',
         'id_group',
         'id_new_group',

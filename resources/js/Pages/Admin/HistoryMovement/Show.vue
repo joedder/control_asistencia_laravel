@@ -14,17 +14,21 @@ const props = defineProps({
   movement: {
     type: Object,
     default: () => ({}),
+  },
+  batchMovements: {
+    type: Array,
+    default: () => ([]),
   }
 })
 </script>
 
 <template>
   <LayoutAuthenticated>
-    <Head title="View Movement" />
+    <Head title="View Migration Batch" />
     <SectionMain>
       <SectionTitleLineWithButton
         :icon="mdiTransitTransfer"
-        title="View Movement"
+        title="View Migration Batch"
         main
       >
         <BaseButton
@@ -40,9 +44,9 @@ const props = defineProps({
         <table>
           <tbody>
             <tr>
-              <td class="p-4 font-semibold border-b dark:border-slate-800">Student</td>
+              <td class="p-4 font-semibold border-b dark:border-slate-800">Batch ID</td>
               <td class="p-4 border-b dark:border-slate-800">
-                {{ movement.student?.name }} {{ movement.student?.last_name || '' }} ({{ movement.student?.identity_id }})
+                {{ movement.batch_id }}
               </td>
             </tr>
             <tr>
@@ -82,6 +86,29 @@ const props = defineProps({
             </tr>
           </tbody>
         </table>
+
+        <div class="mt-8 px-4">
+          <h3 class="text-lg font-bold mb-4">Students in this Batch</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left table-auto border-collapse">
+              <thead>
+                <tr class="bg-gray-100 dark:bg-slate-700">
+                  <th class="p-4 border-b">ID</th>
+                  <th class="p-4 border-b">Student Name</th>
+                  <th class="p-4 border-b">Identity ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="m in batchMovements" :key="m.id" class="border-b hover:bg-gray-50 dark:hover:bg-slate-800">
+                  <td class="p-4">{{ m.student.id }}</td>
+                  <td class="p-4">{{ m.student.name }} {{ m.student.last_name || '' }}</td>
+                  <td class="p-4">{{ m.student.identity_id }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </CardBox>
     </SectionMain>
   </LayoutAuthenticated>

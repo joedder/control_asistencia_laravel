@@ -31,6 +31,14 @@ class Student extends Model
     }
 
     /**
+     * Get the history movements associated with the student.
+     */
+    public function historyMovements()
+    {
+        return $this->hasMany(HistoryMovement::class, 'id_student');
+    }
+
+    /**
      * Scope a query to apply filters from the request.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query

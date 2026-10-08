@@ -24,7 +24,9 @@ class HistoryMovementController extends Controller
         $perPage = $request->input('per_page', 10);
 
         try {
-            $query = HistoryMovement::with(['student', 'group', 'newGroup', 'user']);
+            $query = HistoryMovement::with(['group', 'newGroup', 'user'])
+                ->selectRaw('MIN(id) as id, batch_id, MIN(created_at) as created_at, id_group, id_new_group, migrated, id_user, COUNT(id_student) as student_count')
+                ->groupBy('batch_id', 'id_group', 'id_new_group', 'migrated', 'id_user');
 
             $movements = $query
                 ->filter($request)
@@ -58,7 +60,11 @@ class HistoryMovementController extends Controller
 
     public function create()
     {
-        $groups = Group::with('students')->get();
+        $groups = Group::with(['students' => function ($query) {
+            $query->withExists(['historyMovements as has_pending_migration' => function ($q) {
+                $q->where('migrated', false);
+            }]);
+        }])->get();
 
         return Inertia::render('Admin/HistoryMovement/Create', [
             'groups' => $groups,
@@ -72,9 +78,11 @@ class HistoryMovementController extends Controller
             $data = $request->validated();
             $id_user = Auth::id();
             $isMigrated = $request->boolean('migrated');
+            $batch_id = (string) \Illuminate\Support\Str::uuid();
             
             foreach ($data['students'] as $id_student) {
                 HistoryMovement::create([
+                    'batch_id' => $batch_id,
                     'id_student' => $id_student,
                     'id_group' => $data['id_group'],
                     'id_new_group' => $data['id_new_group'],
@@ -104,20 +112,31 @@ class HistoryMovementController extends Controller
 
     public function show(HistoryMovement $historyMovement)
     {
-        $historyMovement->load(['student', 'group', 'newGroup', 'user']);
+        // Load all students in the batch
+        $batchMovements = HistoryMovement::with(['student'])
+            ->where('batch_id', $historyMovement->batch_id)
+            ->get();
+
+        $historyMovement->load(['group', 'newGroup', 'user']);
 
         return Inertia::render('Admin/HistoryMovement/Show', [
             'movement' => $historyMovement,
+            'batchMovements' => $batchMovements,
         ]);
     }
 
     public function edit(HistoryMovement $historyMovement)
     {
-        $historyMovement->load(['student', 'group', 'newGroup', 'user']);
+        $batchMovements = HistoryMovement::with(['student'])
+            ->where('batch_id', $historyMovement->batch_id)
+            ->get();
+
+        $historyMovement->load(['group', 'newGroup', 'user']);
         $groups = Group::pluck('name', 'id')->toArray();
 
         return Inertia::render('Admin/HistoryMovement/Edit', [
             'movement' => $historyMovement,
+            'batchMovements' => $batchMovements,
             'groups' => $groups,
         ]);
     }
@@ -129,29 +148,44 @@ class HistoryMovementController extends Controller
             $data = $request->validated();
             $isMigrated = $request->boolean('migrated');
             $wasMigrated = $historyMovement->migrated;
+            $batch_id = $historyMovement->batch_id;
 
-            $historyMovement->update([
+            // Delete removed students
+            $studentsToKeep = $data['students'];
+            $removedMovements = HistoryMovement::where('batch_id', $batch_id)
+                ->whereNotIn('id_student', $studentsToKeep)
+                ->get();
+            
+            foreach ($removedMovements as $rm) {
+                // If it was already migrated, revert it
+                if ($wasMigrated) {
+                    Student::where('id', $rm->id_student)->update(['id_group' => $historyMovement->id_group]);
+                }
+                $rm->delete();
+            }
+
+            // Update remaining students
+            HistoryMovement::where('batch_id', $batch_id)->update([
                 'id_group' => $data['id_group'],
                 'id_new_group' => $data['id_new_group'],
-                'id_student' => $data['id_student'],
                 'migrated' => $isMigrated,
                 'id_user' => Auth::id(),
             ]);
 
-            // Si antes no estaba migrado y ahora sí, actualizamos el estudiante
-            if (!$wasMigrated && $isMigrated) {
-                Student::where('id', $data['id_student'])->update(['id_group' => $data['id_new_group']]);
-            }
+            foreach ($studentsToKeep as $id_student) {
+                if (!$wasMigrated && $isMigrated) {
+                    Student::where('id', $id_student)->update(['id_group' => $data['id_new_group']]);
+                }
 
-            // Opcional: Si antes estaba migrado y ahora se des-aprueba, ¿lo regresamos?
-            if ($wasMigrated && !$isMigrated) {
-                 Student::where('id', $data['id_student'])->update(['id_group' => $data['id_group']]);
+                if ($wasMigrated && !$isMigrated) {
+                     Student::where('id', $id_student)->update(['id_group' => $historyMovement->id_group]); // return to ORIGINAL group
+                }
             }
 
             DB::commit();
 
             return redirect()->route('admin.history-movement.index')
-                             ->with('message', 'Movimiento actualizado exitosamente.');
+                             ->with('message', 'Movimientos actualizados exitosamente.');
 
         } catch (Throwable $e) {
             DB::rollBack();
@@ -165,8 +199,18 @@ class HistoryMovementController extends Controller
 
     public function destroy(HistoryMovement $historyMovement)
     {
+        DB::beginTransaction();
         try {
-            $historyMovement->delete();
+            $batch_id = $historyMovement->batch_id;
+            
+            // If it was already migrated, revert before deleting
+            if ($historyMovement->migrated) {
+                $students = HistoryMovement::where('batch_id', $batch_id)->pluck('id_student');
+                Student::whereIn('id', $students)->update(['id_group' => $historyMovement->id_group]);
+            }
+
+            HistoryMovement::where('batch_id', $batch_id)->delete();
+            DB::commit();
 
             return redirect()->route('admin.history-movement.index')
                              ->with('message', 'Movimiento eliminado exitosamente.');

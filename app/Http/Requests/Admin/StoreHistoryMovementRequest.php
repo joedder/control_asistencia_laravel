@@ -23,7 +23,18 @@ class StoreHistoryMovementRequest extends FormRequest
             'id_group' => ['required', 'integer', 'exists:groups,id'],
             'id_new_group' => ['required', 'integer', 'exists:groups,id', 'different:id_group'],
             'students' => ['required', 'array', 'min:1'],
-            'students.*' => ['integer', 'exists:students,id'],
+            'students.*' => [
+                'integer',
+                'exists:students,id',
+                function ($attribute, $value, $fail) {
+                    $hasPending = \App\Models\HistoryMovement::where('id_student', $value)
+                        ->where('migrated', false)
+                        ->exists();
+                    if ($hasPending) {
+                        $fail('El estudiante seleccionado ya tiene una migración pendiente.');
+                    }
+                },
+            ],
             'migrated' => ['boolean'],
         ];
     }
