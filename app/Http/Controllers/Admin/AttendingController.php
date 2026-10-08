@@ -61,12 +61,10 @@ class AttendingController extends Controller
     public function create()
     {
         $teachers = Teacher::pluck('name', 'id')->toArray();
-        $students = Student::pluck('name', 'id')->toArray();
-        $groups = Group::pluck('name', 'id')->toArray();
+        $groups = Group::with('students')->get();
 
         return Inertia::render('Admin/Attending/Create', [
             'teachers' => $teachers,
-            'students' => $students,
             'groups' => $groups,
             'statuses' => [
                 'asistente' => 'Asistente',
@@ -83,9 +81,19 @@ class AttendingController extends Controller
     {
         try {
             $data = $request->validated();
-            $data['id_user'] = Auth::id(); // Assign the current user who is registering this attendance
+            $id_user = Auth::id(); // Assign the current user who is registering this attendance
             
-            Attending::create($data);
+            foreach ($data['attendances'] as $attendance) {
+                Attending::create([
+                    'id_user' => $id_user,
+                    'id_teacher' => $data['id_teacher'],
+                    'id_group' => $data['id_group'],
+                    'class_date' => $data['class_date'],
+                    'id_student' => $attendance['id_student'],
+                    'status' => $attendance['status'],
+                    'social_reason' => $attendance['social_reason'] ?? null,
+                ]);
+            }
 
             return redirect()->route('admin.attending.index')
                              ->with('message', 'Attendance created successfully.');
@@ -104,10 +112,15 @@ class AttendingController extends Controller
      */
     public function show(Attending $attending)
     {
-        $attending->load(['teacher', 'student', 'group', 'user']);
+        // Get all attendances for the same group and class_date
+        $attendances = Attending::with(['student', 'teacher', 'group', 'user'])
+            ->where('id_group', $attending->id_group)
+            ->whereDate('class_date', $attending->class_date)
+            ->get();
 
         return Inertia::render('Admin/Attending/Show', [
-            'attending' => $attending,
+            'attending' => $attending->load(['teacher', 'group']),
+            'group_attendances' => $attendances,
         ]);
     }
 
@@ -117,13 +130,17 @@ class AttendingController extends Controller
     public function edit(Attending $attending)
     {
         $teachers = Teacher::pluck('name', 'id')->toArray();
-        $students = Student::pluck('name', 'id')->toArray();
-        $groups = Group::pluck('name', 'id')->toArray();
+        $groups = Group::with('students')->get();
+
+        $attendances = Attending::with('student')
+            ->where('id_group', $attending->id_group)
+            ->whereDate('class_date', $attending->class_date)
+            ->get();
 
         return Inertia::render('Admin/Attending/Edit', [
             'attending' => $attending,
+            'group_attendances' => $attendances,
             'teachers' => $teachers,
-            'students' => $students,
             'groups' => $groups,
             'statuses' => [
                 'asistente' => 'Asistente',
@@ -139,7 +156,31 @@ class AttendingController extends Controller
     public function update(UpdateAttendingRequest $request, Attending $attending)
     {
         try {
-            $attending->update($request->validated());
+            $data = $request->validated();
+            $id_user = Auth::id();
+
+            foreach ($data['attendances'] as $att_data) {
+                if (isset($att_data['id']) && $att_data['id']) {
+                    Attending::where('id', $att_data['id'])->update([
+                        'id_user' => $id_user,
+                        'id_teacher' => $data['id_teacher'],
+                        'id_group' => $data['id_group'],
+                        'class_date' => $data['class_date'],
+                        'status' => $att_data['status'],
+                        'social_reason' => $att_data['social_reason'] ?? null,
+                    ]);
+                } else {
+                    Attending::create([
+                        'id_user' => $id_user,
+                        'id_teacher' => $data['id_teacher'],
+                        'id_group' => $data['id_group'],
+                        'class_date' => $data['class_date'],
+                        'id_student' => $att_data['id_student'],
+                        'status' => $att_data['status'],
+                        'social_reason' => $att_data['social_reason'] ?? null,
+                    ]);
+                }
+            }
 
             return redirect()->route('admin.attending.index')
                              ->with('message', 'Attendance updated successfully.');

@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from "@inertiajs/vue3"
+import { ref, watch } from "vue"
 import {
   mdiCheckbook,
   mdiArrowLeftBoldOutline
@@ -18,13 +19,9 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-  students: {
-    type: Object,
-    default: () => ({}),
-  },
   groups: {
-    type: Object,
-    default: () => ({}),
+    type: Array,
+    default: () => ([]),
   },
   statuses: {
     type: Object,
@@ -32,14 +29,42 @@ const props = defineProps({
   }
 })
 
+// Transform groups for select component
+const groupOptions = props.groups.reduce((acc, group) => {
+  acc[group.id] = group.name;
+  return acc;
+}, {});
+
 const form = useForm({
   id_teacher: '',
-  id_student: '',
   id_group: '',
-  status: 'asistente',
-  social_reason: '',
-  class_date: ''
+  class_date: new Date().toISOString().split('T')[0], // Today's date automatically
+  attendances: [],
 })
+
+const selectedGroup = ref(null);
+
+watch(() => form.id_group, (newGroupId) => {
+  if (newGroupId) {
+    const group = props.groups.find(g => g.id == newGroupId);
+    if (group) {
+      selectedGroup.value = group;
+      form.id_teacher = group.id_teacher || '';
+      
+      // Initialize attendances array for all students in the group
+      form.attendances = group.students.map(student => ({
+        id_student: student.id,
+        name: student.name + ' ' + (student.last_name || ''),
+        identity_id: student.identity_id,
+        status: 'asistente', // Default to asistente
+        social_reason: ''
+      }));
+    }
+  } else {
+    selectedGroup.value = null;
+    form.attendances = [];
+  }
+});
 </script>
 
 <template>
@@ -48,7 +73,7 @@ const form = useForm({
     <SectionMain>
       <SectionTitleLineWithButton
         :icon="mdiCheckbook"
-        title="Add Attendance"
+        title="Add Attendances (Batch)"
         main
       >
         <BaseButton
@@ -64,24 +89,7 @@ const form = useForm({
         form
         @submit.prevent="form.post(route('admin.attending.store'))"
       >
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <FormField
-            label="Student"
-            :class="{ 'text-red-400': form.errors.id_student }"
-            >
-            <FormControl
-                v-model="form.id_student"
-                type="select"
-                :options="props.students"
-                placeholder="Select a Student"
-                :error="form.errors.id_student"
-            >
-                <div class="text-red-400 text-sm" v-if="form.errors.id_student">
-                {{ form.errors.id_student }}
-                </div>
-            </FormControl>
-            </FormField>
-
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <FormField
             label="Group"
             :class="{ 'text-red-400': form.errors.id_group }"
@@ -89,7 +97,7 @@ const form = useForm({
             <FormControl
                 v-model="form.id_group"
                 type="select"
-                :options="props.groups"
+                :options="groupOptions"
                 placeholder="Select a Group"
                 :error="form.errors.id_group"
             >
@@ -98,9 +106,7 @@ const form = useForm({
                 </div>
             </FormControl>
             </FormField>
-        </div>
 
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <FormField
             label="Teacher"
             :class="{ 'text-red-400': form.errors.id_teacher }"
@@ -134,39 +140,59 @@ const form = useForm({
             </FormField>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <FormField
-            label="Status"
-            :class="{ 'text-red-400': form.errors.status }"
-            >
-            <FormControl
-                v-model="form.status"
-                type="select"
-                :options="props.statuses"
-                placeholder="Select a Status"
-                :error="form.errors.status"
-            >
-                <div class="text-red-400 text-sm" v-if="form.errors.status">
-                {{ form.errors.status }}
-                </div>
-            </FormControl>
-            </FormField>
-
-            <FormField
-            label="Reason (if justified/absent)"
-            :class="{ 'text-red-400': form.errors.social_reason }"
-            >
-            <FormControl
-                v-model="form.social_reason"
-                type="textarea"
-                placeholder="Enter Reason"
-                :error="form.errors.social_reason"
-            >
-                <div class="text-red-400 text-sm" v-if="form.errors.social_reason">
-                {{ form.errors.social_reason }}
-                </div>
-            </FormControl>
-            </FormField>
+        <div v-if="selectedGroup && form.attendances.length > 0" class="mt-6">
+          <h3 class="text-lg font-bold mb-4">Students List</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left table-auto">
+              <thead>
+                <tr>
+                  <th class="p-4 border-b">ID</th>
+                  <th class="p-4 border-b">Student</th>
+                  <th class="p-4 border-b">Status</th>
+                  <th class="p-4 border-b">Reason (if Justificado)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(attendance, index) in form.attendances" :key="attendance.id_student" class="border-b">
+                  <td class="p-4">{{ attendance.identity_id }}</td>
+                  <td class="p-4">{{ attendance.name }}</td>
+                  <td class="p-4">
+                    <div class="flex items-center space-x-4">
+                      <label class="flex items-center cursor-pointer">
+                        <input type="radio" v-model="attendance.status" value="asistente" class="mr-2 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"> 
+                        <span>Asistente</span>
+                      </label>
+                      <label class="flex items-center cursor-pointer">
+                        <input type="radio" v-model="attendance.status" value="inasistente" class="mr-2 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"> 
+                        <span>Inasistente</span>
+                      </label>
+                      <label class="flex items-center cursor-pointer">
+                        <input type="radio" v-model="attendance.status" value="justificado" class="mr-2 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"> 
+                        <span>Justificado</span>
+                      </label>
+                    </div>
+                    <div class="text-red-400 text-sm mt-1" v-if="form.errors[`attendances.${index}.status`]">
+                      {{ form.errors[`attendances.${index}.status`] }}
+                    </div>
+                  </td>
+                  <td class="p-4">
+                    <FormControl
+                      v-if="attendance.status === 'justificado'"
+                      v-model="attendance.social_reason"
+                      type="text"
+                      placeholder="Enter Reason"
+                    />
+                    <div class="text-red-400 text-sm mt-1" v-if="form.errors[`attendances.${index}.social_reason`]">
+                      {{ form.errors[`attendances.${index}.social_reason`] }}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div v-else-if="selectedGroup && form.attendances.length === 0" class="mt-6 p-4 text-center text-gray-500 border rounded">
+          No students found in this group.
         </div>
 
         <template #footer>
@@ -174,9 +200,9 @@ const form = useForm({
             <BaseButton
               type="submit"
               color="info"
-              label="Submit"
+              label="Submit Attendances"
               :class="{ 'opacity-25': form.processing }"
-              :disabled="form.processing"
+              :disabled="form.processing || form.attendances.length === 0"
             />
           </BaseButtons>
         </template>

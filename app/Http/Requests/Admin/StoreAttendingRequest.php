@@ -23,11 +23,12 @@ class StoreAttendingRequest extends FormRequest
     {
         return [
             'id_teacher' => ['required', 'integer', 'exists:teachers,id'],
-            'id_student' => ['required', 'integer', 'exists:students,id'],
             'id_group' => ['required', 'integer', 'exists:groups,id'],
-            'status' => ['required', 'in:asistente,inasistente,justificado'],
-            'social_reason' => ['nullable', 'string'],
             'class_date' => ['required', 'date'],
+            'attendances' => ['required', 'array'],
+            'attendances.*.id_student' => ['required', 'integer', 'exists:students,id'],
+            'attendances.*.status' => ['required', 'in:asistente,inasistente,justificado'],
+            'attendances.*.social_reason' => ['nullable', 'string'],
         ];
     }
 }
