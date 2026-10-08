@@ -121,7 +121,7 @@ function destroy(id) {
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>N°</th>
               <th>Name</th>
               <th>Description</th>
               <th v-if="can.edit || can.delete">Actions</th>
@@ -129,9 +129,9 @@ function destroy(id) {
           </thead>
 
           <tbody>
-            <tr v-for="level in levels?.data" :key="level.id">
-              <td data-label="ID">
-                {{ level.id }}
+            <tr v-for="(level, index) in levels?.data" :key="level.id">
+              <td data-label="N°">
+                {{ (levels.current_page - 1) * levels.per_page + index + 1 }}
               </td>
               <td data-label="Name">
                 {{ level.name }}

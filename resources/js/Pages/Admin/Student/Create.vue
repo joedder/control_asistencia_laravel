@@ -86,13 +86,13 @@ const form = useForm({
 
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <FormField
-            label="Identity ID"
+            label="Identification"
             :class="{ 'text-red-400': form.errors.identity_id }"
             >
             <FormControl
                 v-model="form.identity_id"
                 type="text"
-                placeholder="Enter Identity ID"
+                placeholder="Enter Identification"
                 :error="form.errors.identity_id"
             >
                 <div class="text-red-400 text-sm" v-if="form.errors.identity_id">

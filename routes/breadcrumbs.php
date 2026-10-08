@@ -24,10 +24,12 @@ Breadcrumbs::macro('resource', function (string $name, string $title, ?string $p
         Breadcrumbs::for("{$name}.show", function (BreadcrumbTrail $trail, $model, $item) use ($name) {
             $trail->parent("{$name}.index", $model, $item);
             \Log::info("{$name}.show");
+            
+            $displayName = $item->name ?? $item->title ?? $item->batch_id ?? ('Record ' . ($item->id ?? ''));
             if (Route::has("{$name}.show")) {
-                $trail->push($item->name ?? $model, route("{$name}.show", [$model, $item]));
+                $trail->push($displayName, route("{$name}.show", [$model, $item]));
             } else {
-                $trail->push($item->name ?? $model);
+                $trail->push($displayName);
             }
         });
     
@@ -49,10 +51,12 @@ Breadcrumbs::macro('resource', function (string $name, string $title, ?string $p
     
         Breadcrumbs::for("{$name}.show", function (BreadcrumbTrail $trail, $model) use ($name) {
             $trail->parent("{$name}.index");
+            
+            $displayName = $model->name ?? $model->title ?? $model->batch_id ?? ('Record ' . ($model->id ?? ''));
             if (Route::has("$name.show")) {
-                $trail->push($model->name ?? $model, route("{$name}.show", $model));
+                $trail->push($displayName, route("{$name}.show", $model));
             } else {
-                $trail->push($model->name ?? $model);
+                $trail->push($displayName);
             }
         });
     

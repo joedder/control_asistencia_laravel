@@ -41,7 +41,7 @@ const props = defineProps({
           <tbody>
             <tr>
               <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">ID</td>
-              <td data-label="ID">{{ teacher.id }}</td>
+              <td data-label="N°">{{ teacher.id }}</td>
             </tr>
             <tr>
               <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">Name</td>
@@ -52,8 +52,8 @@ const props = defineProps({
               <td data-label="Last Name">{{ teacher.last_name }}</td>
             </tr>
             <tr>
-              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">Identity ID</td>
-              <td data-label="Identity ID">{{ teacher.identity_id || 'N/A' }}</td>
+              <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">Identification</td>
+              <td data-label="Identification">{{ teacher.identity_id || 'N/A' }}</td>
             </tr>
             <tr>
               <td class="p-4 pl-8 text-slate-500 dark:text-slate-400 hidden lg:block">English Level</td>

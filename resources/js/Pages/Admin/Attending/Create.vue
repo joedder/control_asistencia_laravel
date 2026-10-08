@@ -146,7 +146,7 @@ watch(() => form.id_group, (newGroupId) => {
             <table class="w-full text-left table-auto">
               <thead>
                 <tr>
-                  <th class="p-4 border-b">ID</th>
+                  <th class="p-4 border-b">N°</th>
                   <th class="p-4 border-b">Student</th>
                   <th class="p-4 border-b">Status</th>
                   <th class="p-4 border-b">Reason (if Justificado)</th>

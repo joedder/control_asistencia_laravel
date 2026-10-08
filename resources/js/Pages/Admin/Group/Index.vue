@@ -121,7 +121,7 @@ function destroy(id) {
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>N°</th>
               <th>Name</th>
               <th>Teacher</th>
               <th>Category Group</th>
@@ -131,9 +131,9 @@ function destroy(id) {
           </thead>
 
           <tbody>
-            <tr v-for="group in groups?.data" :key="group.id">
-              <td data-label="ID">
-                {{ group.id }}
+            <tr v-for="(group, index) in groups?.data" :key="group.id">
+              <td data-label="N°">
+                {{ (groups.current_page - 1) * groups.per_page + index + 1 }}
               </td>
               <td data-label="Name">
                 {{ group.name }}

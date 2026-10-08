@@ -52,7 +52,7 @@ const props = defineProps({
               </td>
             </tr>
             <tr>
-              <td class="p-4 font-semibold border-b dark:border-slate-800">Identity ID</td>
+              <td class="p-4 font-semibold border-b dark:border-slate-800">Identification</td>
               <td class="p-4 border-b dark:border-slate-800">
                 {{ student.identity_id }}
               </td>

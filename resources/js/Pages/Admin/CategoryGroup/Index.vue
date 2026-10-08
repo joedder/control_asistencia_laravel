@@ -121,7 +121,7 @@ function destroy(id) {
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>N°</th>
               <th>Name</th>
               <th>Description</th>
               <th v-if="can.edit || can.delete">Actions</th>
@@ -130,7 +130,7 @@ function destroy(id) {
 
           <tbody>
             <tr v-for="categoryGroup in category_groups?.data" :key="categoryGroup.id">
-              <td data-label="ID">
+              <td data-label="N°">
                 {{ categoryGroup.id }}
               </td>
               <td data-label="Name">

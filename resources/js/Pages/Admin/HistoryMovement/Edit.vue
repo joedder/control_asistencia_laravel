@@ -133,17 +133,17 @@ const toggleStudent = (studentId) => {
               <thead>
                 <tr class="bg-gray-100 dark:bg-slate-700">
                   <th class="p-4 border-b w-12">Keep</th>
-                  <th class="p-4 border-b">ID</th>
+                  <th class="p-4 border-b">N°</th>
                   <th class="p-4 border-b">Student Name</th>
-                  <th class="p-4 border-b">Identity ID</th>
+                  <th class="p-4 border-b">Identification</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="m in batchMovements" :key="m.id" class="border-b hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer" @click="toggleStudent(m.student.id)">
+                <tr v-for="(m, index) in batchMovements" :key="m.id" class="border-b hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer" @click="toggleStudent(m.student.id)">
                   <td class="p-4 text-center">
                     <input type="checkbox" :checked="form.students.includes(m.student.id)" @change.stop="toggleStudent(m.student.id)" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                   </td>
-                  <td class="p-4">{{ m.student.id }}</td>
+                  <td class="p-4">{{ index + 1 }}</td>
                   <td class="p-4">{{ m.student.name }} {{ m.student.last_name || '' }}</td>
                   <td class="p-4">{{ m.student.identity_id }}</td>
                 </tr>

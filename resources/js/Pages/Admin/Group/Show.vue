@@ -80,17 +80,17 @@ const props = defineProps({
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>N°</th>
               <th>Name</th>
               <th>Last Name</th>
-              <th>Identity ID</th>
+              <th>Identification</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="student in group.students" :key="student.id">
-              <td data-label="ID">
-                {{ student.id }}
+            <tr v-for="(student, index) in group.students" :key="student.id">
+              <td data-label="N°">
+                {{ index + 1 }}
               </td>
               <td data-label="Name">
                 {{ student.name }}
@@ -98,7 +98,7 @@ const props = defineProps({
               <td data-label="Last Name">
                 {{ student.last_name }}
               </td>
-              <td data-label="Identity ID">
+              <td data-label="Identification">
                 {{ student.identity_id }}
               </td>
               <td class="before:hidden lg:w-1 whitespace-nowrap">

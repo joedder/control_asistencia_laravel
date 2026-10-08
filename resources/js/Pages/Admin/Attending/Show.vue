@@ -58,7 +58,7 @@ const props = defineProps({
           <table class="w-full text-left table-auto border-collapse">
             <thead>
               <tr class="bg-gray-100 dark:bg-slate-700">
-                <th class="p-4 border-b">ID</th>
+                <th class="p-4 border-b">N°</th>
                 <th class="p-4 border-b">Student</th>
                 <th class="p-4 border-b">Status</th>
                 <th class="p-4 border-b">Reason</th>

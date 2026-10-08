@@ -121,19 +121,19 @@ function destroy(id) {
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>N°</th>
               <th>Name</th>
               <th>Last Name</th>
-              <th>Identity ID</th>
+              <th>Identification</th>
               <th>English Level</th>
               <th v-if="can.edit || can.delete">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="teacher in teachers?.data" :key="teacher.id">
-              <td data-label="ID">
-                {{ teacher.id }}
+            <tr v-for="(teacher, index) in teachers?.data" :key="teacher.id">
+              <td data-label="N°">
+                {{ (teachers.current_page - 1) * teachers.per_page + index + 1 }}
               </td>
               <td data-label="Name">
                 {{ teacher.name }}
@@ -141,7 +141,7 @@ function destroy(id) {
               <td data-label="Last Name">
                 {{ teacher.last_name }}
               </td>
-              <td data-label="Identity ID">
+              <td data-label="Identification">
                 {{ teacher.identity_id || '-' }}
               </td>
               <td data-label="English Level">

@@ -151,7 +151,7 @@ function destroy(id) {
         <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>N°</th>
               <th>Total Students</th>
               <th>From Group</th>
               <th>To Group</th>
@@ -162,9 +162,9 @@ function destroy(id) {
           </thead>
 
           <tbody>
-            <tr v-for="movement in movements?.data" :key="movement.id">
-              <td data-label="ID">
-                {{ movement.id }}
+            <tr v-for="(movement, index) in movements?.data" :key="movement.id">
+              <td data-label="N°">
+                {{ (movements.current_page - 1) * movements.per_page + index + 1 }}
               </td>
               <td data-label="Total Students">
                 {{ movement.student_count }}

@@ -142,9 +142,9 @@ const toggleStudent = (studentId) => {
               <thead>
                 <tr class="bg-gray-100 dark:bg-slate-700">
                   <th class="p-4 border-b w-12">Select</th>
-                  <th class="p-4 border-b">ID</th>
+                  <th class="p-4 border-b">N°</th>
                   <th class="p-4 border-b">Student Name</th>
-                  <th class="p-4 border-b">Identity ID</th>
+                  <th class="p-4 border-b">Identification</th>
                   <th class="p-4 border-b">Status</th>
                 </tr>
               </thead>

@@ -169,7 +169,7 @@ onMounted(() => {
             <table class="w-full text-left table-auto">
               <thead>
                 <tr>
-                  <th class="p-4 border-b">ID</th>
+                  <th class="p-4 border-b">N°</th>
                   <th class="p-4 border-b">Student</th>
                   <th class="p-4 border-b">Status</th>
                   <th class="p-4 border-b">Reason (if Justificado)</th>
@@ -177,7 +177,7 @@ onMounted(() => {
               </thead>
               <tbody>
                 <tr v-for="(attendance, index) in form.attendances" :key="attendance.id_student" class="border-b">
-                  <td class="p-4">{{ attendance.identity_id }}</td>
+                  <td class="p-4">{{ index + 1 }}</td>
                   <td class="p-4">{{ attendance.name }}</td>
                   <td class="p-4">
                     <div class="flex items-center space-x-4">
