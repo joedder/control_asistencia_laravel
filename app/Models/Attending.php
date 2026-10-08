@@ -78,17 +78,13 @@ class Attending extends Model
         $query
             // Filtros de columna
             ->when($request->filled('id_teacher'), fn($q) => $q->where('id_teacher', $request->id_teacher))
-            ->when($request->filled('id_student'), fn($q) => $q->where('id_student', $request->id_student))
             ->when($request->filled('id_group'), fn($q) => $q->where('id_group', $request->id_group))
-            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+            ->when($request->filled('class_date'), fn($q) => $q->whereDate('class_date', $request->class_date))
             
-            // Búsqueda global (podría buscar por nombre del estudiante o profesor a través de relaciones, 
-            // pero para mantenerlo simple lo hacemos sobre status o lo ignoramos si no aplica)
+            // Búsqueda global
             ->when($request->filled('search'), function ($q) use ($request) {
-                $q->where(fn($sub) =>
-                    $sub->where('status', 'like', '%' . $request->search . '%')
-                        ->orWhere('social_reason', 'like', '%' . $request->search . '%')
-                );
+                // Here search could map to group name or teacher name using relations,
+                // but usually the specific filters are enough. We'll leave it empty for now or filter by date string.
             });
 
         return $query;

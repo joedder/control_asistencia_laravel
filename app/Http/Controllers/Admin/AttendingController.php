@@ -27,7 +27,9 @@ class AttendingController extends Controller
         $perPage = $request->input('per_page', 10);
 
         try {
-            $query = Attending::with(['teacher', 'student', 'group', 'user']);
+            $query = Attending::with(['teacher', 'group'])
+                ->selectRaw('MIN(id) as id, id_group, id_teacher, class_date')
+                ->groupBy('id_group', 'id_teacher', 'class_date');
 
             $attendings = $query
                 ->filter($request)
@@ -35,9 +37,15 @@ class AttendingController extends Controller
                 ->paginate($perPage)
                 ->withQueryString();
 
+            // Fetch extra info for frontend filters
+            $teachers = Teacher::pluck('name', 'id')->toArray();
+            $groups = Group::pluck('name', 'id')->toArray();
+
             return Inertia::render('Admin/Attending/Index', [
                 'attendings' => $attendings,
-                'filters'  => $request->only(['search', 'id_teacher', 'id_student', 'id_group', 'status']),
+                'teachers' => $teachers,
+                'groups' => $groups,
+                'filters'  => $request->only(['search', 'id_teacher', 'id_group', 'class_date']),
                 'can' => [
                     'create' => true,
                     'edit' => true,
@@ -200,10 +208,13 @@ class AttendingController extends Controller
     public function destroy(Attending $attending)
     {
         try {
-            $attending->delete();
+            // Delete all attendances for the same group and date
+            Attending::where('id_group', $attending->id_group)
+                ->whereDate('class_date', $attending->class_date)
+                ->delete();
 
             return redirect()->route('admin.attending.index')
-                             ->with('message', 'Attendance deleted successfully.');
+                             ->with('message', 'Attendances deleted successfully.');
 
         } catch (Throwable $e) {
             report($e);

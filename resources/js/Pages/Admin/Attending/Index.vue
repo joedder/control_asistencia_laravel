@@ -1,5 +1,6 @@
 <script setup>
-import { Head, Link, useForm } from "@inertiajs/vue3"
+import { Head, Link, useForm, router } from "@inertiajs/vue3"
+import { watch } from "vue"
 import {
   mdiCheckbook,
   mdiPlus,
@@ -26,6 +27,14 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  teachers: {
+    type: Object,
+    default: () => ({}),
+  },
+  groups: {
+    type: Object,
+    default: () => ({}),
+  },
   can: {
     type: Object,
     default: () => ({}),
@@ -37,13 +46,23 @@ const props = defineProps({
 })
 
 const form = useForm({
-  search: props.filters.search,
+  id_teacher: props.filters.id_teacher || '',
+  id_group: props.filters.id_group || '',
+  class_date: props.filters.class_date || '',
+  sort_dir: new URLSearchParams(window.location.search).get('sort_dir') || 'desc',
 })
+
+const submitSearch = () => {
+  form.get(route('admin.attending.index'), {
+    preserveState: true,
+    preserveScroll: true,
+  });
+}
 
 const formDelete = useForm({})
 
 function destroy(id) {
-  if (confirm("Are you sure you want to delete?")) {
+  if (confirm("Are you sure you want to delete all attendances for this group on this date?")) {
     formDelete.delete(route("admin.attending.destroy", id))
   }
 }
@@ -51,11 +70,11 @@ function destroy(id) {
 
 <template>
   <LayoutAuthenticated>
-    <Head title="Attendings" />
+    <Head title="Attendances" />
     <SectionMain>
       <SectionTitleLineWithButton
         :icon="mdiCheckbook"
-        title="Attendings"
+        title="Attendances"
         main
       >
         <BaseButton
@@ -87,57 +106,66 @@ function destroy(id) {
         {{ error }}
       </NotificationBar>
 
-      <CardBox class="mb-6" has-table>
-        <form @submit.prevent="form.get(route('admin.attending.index'))">
-          <div class="py-2 flex">
-            <div class="flex pl-4">
-              <input
-                type="search"
-                v-model="form.search"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  dark:bg-slate-800
-                  dark:border-slate-700
-                "
-                placeholder="Search..."
-              />
+      <CardBox class="mb-6">
+        <form @submit.prevent="submitSearch">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-5 items-end">
+            <div>
+              <label class="block text-sm font-medium mb-1">Teacher</label>
+              <select v-model="form.id_teacher" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">
+                <option value="">All Teachers</option>
+                <option v-for="(name, id) in teachers" :key="id" :value="id">{{ name }}</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium mb-1">Group</label>
+              <select v-model="form.id_group" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">
+                <option value="">All Groups</option>
+                <option v-for="(name, id) in groups" :key="id" :value="id">{{ name }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Date</label>
+              <input type="date" v-model="form.class_date" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Order Date</label>
+              <select v-model="form.sort_dir" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">
+                <option value="desc">Descendente</option>
+                <option value="asc">Ascendente</option>
+              </select>
+            </div>
+
+            <div>
               <BaseButton
-                label="Search"
+                label="Filter"
                 type="submit"
                 color="info"
-                class="ml-4 inline-flex items-center px-4 py-2"
+                class="w-full"
               />
             </div>
           </div>
         </form>
       </CardBox>
+
       <CardBox class="mb-6" has-table>
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Student</th>
+              <th>N°</th>
               <th>Group</th>
               <th>Teacher</th>
               <th>Date</th>
-              <th>Status</th>
               <th v-if="can.edit || can.delete">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr v-for="attending in attendings?.data" :key="attending.id">
-              <td data-label="ID">
-                {{ attending.id }}
-              </td>
-              <td data-label="Student">
-                {{ attending.student?.name }} {{ attending.student?.last_name }}
+            <tr v-for="(attending, index) in attendings?.data" :key="attending.id">
+              <td data-label="N°">
+                {{ (attendings.current_page - 1) * attendings.per_page + index + 1 }}
               </td>
               <td data-label="Group">
                 {{ attending.group?.name }}
@@ -147,16 +175,6 @@ function destroy(id) {
               </td>
               <td data-label="Date">
                 {{ new Date(attending.class_date).toLocaleDateString() }}
-              </td>
-              <td data-label="Status">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      :class="{
-                        'bg-green-100 text-green-800': attending.status === 'asistente',
-                        'bg-red-100 text-red-800': attending.status === 'inasistente',
-                        'bg-yellow-100 text-yellow-800': attending.status === 'justificado'
-                      }">
-                  {{ attending.status }}
-                </span>
               </td>
               <td
                 v-if="can.edit || can.delete"
@@ -187,8 +205,8 @@ function destroy(id) {
               </td>
             </tr>
             <tr v-if="!attendings?.data || attendings.data.length === 0">
-              <td colspan="7" class="text-center py-4">
-                No attendings found.
+              <td colspan="5" class="text-center py-4">
+                No attendances found.
               </td>
             </tr>
           </tbody>
