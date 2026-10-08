@@ -59,15 +59,15 @@ const loadAttendances = (groupId) => {
       selectedGroup.value = group;
       form.id_teacher = group.id_teacher || form.id_teacher || '';
       
-      form.attendances = group.students.map(student => {
-        const existingAtt = props.group_attendances.find(a => a.id_student === student.id);
+      // Use ONLY the students that are in the existing group_attendances
+      form.attendances = props.group_attendances.map(att => {
         return {
-          id: existingAtt ? existingAtt.id : null,
-          id_student: student.id,
-          name: student.name + ' ' + (student.last_name || ''),
-          identity_id: student.identity_id,
-          status: existingAtt ? existingAtt.status : 'asistente',
-          social_reason: existingAtt ? existingAtt.social_reason : ''
+          id: att.id,
+          id_student: att.id_student,
+          name: att.student ? (att.student.name + ' ' + (att.student.last_name || '')) : 'Unknown',
+          identity_id: att.student ? att.student.identity_id : '',
+          status: att.status,
+          social_reason: att.social_reason || ''
         };
       });
     }
