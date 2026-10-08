@@ -72,6 +72,7 @@ Breadcrumbs::resource('admin.level', 'Levels');
 Breadcrumbs::resource('admin.group', 'Groups');
 Breadcrumbs::resource('admin.student', 'Students');
 Breadcrumbs::resource('admin.attending', 'Attendings');
+Breadcrumbs::resource('admin.history-movement', 'History Movements');
 Breadcrumbs::resource('admin.media', 'Media');
 Breadcrumbs::resource('admin.menu', 'Menu');
 Breadcrumbs::resource('admin.menu.item', 'Menu Items', 'admin.menu');
