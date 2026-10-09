@@ -32,8 +32,11 @@ class StudentController extends Controller
                 ->paginate($perPage)
                 ->withQueryString();
 
+            $groups = Group::pluck('name', 'id')->toArray();
+
             return Inertia::render('Admin/Student/Index', [
                 'students' => $students,
+                'groups' => $groups,
                 'filters'  => $request->only(['search', 'name', 'last_name', 'identity_id', 'id_group']),
                 'can' => [
                     'create' => true,

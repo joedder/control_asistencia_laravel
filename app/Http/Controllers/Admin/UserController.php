@@ -27,29 +27,30 @@ class UserController extends Controller
         $this->authorize('adminViewAny', User::class);
         $users = (new User)->newQuery();
 
-        if (request()->has('search')) {
-            $users->where('name', 'Like', '%'.request()->input('search').'%');
+        if (request()->has('search') && request()->input('search')) {
+            $users->where(function ($q) {
+                $q->where('name', 'Like', '%'.request()->input('search').'%')
+                  ->orWhere('email', 'Like', '%'.request()->input('search').'%');
+            });
         }
 
-        if (request()->query('sort')) {
-            $attribute = request()->query('sort');
-            $sort_order = 'ASC';
-            if (strncmp($attribute, '-', 1) === 0) {
-                $sort_order = 'DESC';
-                $attribute = substr($attribute, 1);
-            }
-            $users->orderBy($attribute, $sort_order);
-        } else {
-            $users->latest();
+        if (request()->has('role') && request()->input('role')) {
+            $users->role(request()->input('role'));
         }
+
+        $sortDir = request()->input('sort_dir', 'desc');
+        $users->orderBy('id', $sortDir);
 
         $users = $users->paginate(config('admin.paginate.per_page'))
                     ->onEachSide(config('admin.paginate.each_side'))
                     ->appends(request()->query());
 
+        $roles = Role::pluck('name', 'name')->toArray();
+
         return Inertia::render('Admin/User/Index', [
             'users' => $users,
-            'filters' => request()->all('search'),
+            'roles' => $roles,
+            'filters' => request()->all(['search', 'role', 'sort_dir']),
             'can' => [
                 'create' => Auth::user()->can('user create'),
                 'edit' => Auth::user()->can('user edit'),

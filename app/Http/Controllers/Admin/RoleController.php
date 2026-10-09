@@ -28,17 +28,8 @@ class RoleController extends Controller
             $roles->where('name', 'Like', '%'.request()->input('search').'%');
         }
 
-        if (request()->query('sort')) {
-            $attribute = request()->query('sort');
-            $sort_order = 'ASC';
-            if (strncmp($attribute, '-', 1) === 0) {
-                $sort_order = 'DESC';
-                $attribute = substr($attribute, 1);
-            }
-            $roles->orderBy($attribute, $sort_order);
-        } else {
-            $roles->latest();
-        }
+        $sortDir = request()->input('sort_dir', 'desc');
+        $roles->orderBy('id', $sortDir);
 
         $roles = $roles->paginate(config('admin.paginate.per_page'))
                     ->onEachSide(config('admin.paginate.each_side'))
@@ -46,7 +37,7 @@ class RoleController extends Controller
 
         return Inertia::render('Admin/Role/Index', [
             'roles' => $roles,
-            'filters' => request()->all('search'),
+            'filters' => request()->all(['search', 'sort_dir']),
             'can' => [
                 'create' => Auth::user()->can('role create'),
                 'edit' => Auth::user()->can('role edit'),

@@ -45,6 +45,7 @@ const form = useForm({
   id_group: props.filters.id_group || '',
   id_new_group: props.filters.id_new_group || '',
   migrated: props.filters.migrated || '',
+  sort_dir: new URLSearchParams(window.location.search).get('sort_dir') || 'desc',
 })
 
 const submitSearch = () => {
@@ -103,7 +104,7 @@ function destroy(id) {
 
       <CardBox class="mb-6">
         <form @submit.prevent="submitSearch">
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-5 items-end">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 items-end">
             <div>
               <label class="block text-sm font-medium mb-1">Search Student</label>
               <input
@@ -133,6 +134,13 @@ function destroy(id) {
                 <option value="">All</option>
                 <option value="1">Migrated (Approved)</option>
                 <option value="0">Pending</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Order Dir</label>
+              <select v-model="form.sort_dir" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">
+                <option value="desc">Descendente</option>
+                <option value="asc">Ascendente</option>
               </select>
             </div>
             <div>

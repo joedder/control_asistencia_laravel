@@ -46,6 +46,7 @@ const props = defineProps({
 })
 
 const form = useForm({
+  search: props.filters.search || '',
   id_teacher: props.filters.id_teacher || '',
   id_group: props.filters.id_group || '',
   class_date: props.filters.class_date || '',
@@ -108,7 +109,12 @@ function destroy(id) {
 
       <CardBox class="mb-6">
         <form @submit.prevent="submitSearch">
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-5 items-end">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 items-end">
+            <div>
+              <label class="block text-sm font-medium mb-1">Search</label>
+              <input type="search" v-model="form.search" placeholder="Search..." class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700" />
+            </div>
+
             <div>
               <label class="block text-sm font-medium mb-1">Teacher</label>
               <select v-model="form.id_teacher" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">

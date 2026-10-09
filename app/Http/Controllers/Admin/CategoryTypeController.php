@@ -27,24 +27,15 @@ class CategoryTypeController extends Controller
             $categoryTypes->where('name', 'Like', '%'.request()->input('search').'%');
         }
 
-        if (request()->query('sort')) {
-            $attribute = request()->query('sort');
-            $sort_order = 'ASC';
-            if (strncmp($attribute, '-', 1) === 0) {
-                $sort_order = 'DESC';
-                $attribute = substr($attribute, 1);
-            }
-            $categoryTypes->orderBy($attribute, $sort_order);
-        } else {
-            $categoryTypes->latest();
-        }
+        $sortDir = request()->input('sort_dir', 'desc');
+        $categoryTypes->orderBy('id', $sortDir);
 
         $categoryTypes = $categoryTypes->paginate(config('admin.paginate.per_page'))
                                 ->onEachSide(config('admin.paginate.each_side'));
 
         return Inertia::render('Admin/Category/Type/Index', [
             'categoryTypes' => $categoryTypes,
-            'filters' => request()->all('search'),
+            'filters' => request()->all(['search', 'sort_dir']),
             'can' => [
                 'create' => Auth::user()->can('category.type create'),
                 'edit' => Auth::user()->can('category.type edit'),

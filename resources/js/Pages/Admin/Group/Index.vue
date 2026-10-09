@@ -26,6 +26,18 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  teachers: {
+    type: Object,
+    default: () => ({}),
+  },
+  category_groups: {
+    type: Object,
+    default: () => ({}),
+  },
+  levels: {
+    type: Object,
+    default: () => ({}),
+  },
   can: {
     type: Object,
     default: () => ({}),
@@ -37,8 +49,19 @@ const props = defineProps({
 })
 
 const form = useForm({
-  search: props.filters.search,
+  search: props.filters.search || '',
+  id_teacher: props.filters.id_teacher || '',
+  id_category_group: props.filters.id_category_group || '',
+  id_level: props.filters.id_level || '',
+  sort_dir: new URLSearchParams(window.location.search).get('sort_dir') || 'desc',
 })
+
+const submitSearch = () => {
+  form.get(route('admin.group.index'), {
+    preserveState: true,
+    preserveScroll: true,
+  });
+}
 
 const formDelete = useForm({})
 
@@ -87,31 +110,57 @@ function destroy(id) {
         {{ error }}
       </NotificationBar>
 
-      <CardBox class="mb-6" has-table>
-        <form @submit.prevent="form.get(route('admin.group.index'))">
-          <div class="py-2 flex">
-            <div class="flex pl-4">
+      <CardBox class="mb-6">
+        <form @submit.prevent="submitSearch">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 items-end">
+            <div>
+              <label class="block text-sm font-medium mb-1">Search</label>
               <input
                 type="search"
                 v-model="form.search"
-                class="
-                  rounded-md
-                  shadow-sm
-                  border-gray-300
-                  focus:border-indigo-300
-                  focus:ring
-                  focus:ring-indigo-200
-                  focus:ring-opacity-50
-                  dark:bg-slate-800
-                  dark:border-slate-700
-                "
+                class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700"
                 placeholder="Search..."
               />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Teacher</label>
+              <select v-model="form.id_teacher" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">
+                <option value="">All Teachers</option>
+                <option v-for="(name, id) in teachers" :key="id" :value="id">{{ name }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Category</label>
+              <select v-model="form.id_category_group" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">
+                <option value="">All Categories</option>
+                <option v-for="(name, id) in category_groups" :key="id" :value="id">{{ name }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Level</label>
+              <select v-model="form.id_level" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">
+                <option value="">All Levels</option>
+                <option v-for="(name, id) in levels" :key="id" :value="id">{{ name }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Order Dir</label>
+              <select v-model="form.sort_dir" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700">
+                <option value="desc">Descendente</option>
+                <option value="asc">Ascendente</option>
+              </select>
+            </div>
+
+            <div>
               <BaseButton
-                label="Search"
+                label="Filter"
                 type="submit"
                 color="info"
-                class="ml-4 inline-flex items-center px-4 py-2"
+                class="w-full"
               />
             </div>
           </div>

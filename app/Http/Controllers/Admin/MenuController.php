@@ -27,17 +27,8 @@ class MenuController extends Controller
             $menus->where('name', 'Like', '%'.request()->input('search').'%');
         }
 
-        if (request()->query('sort')) {
-            $attribute = request()->query('sort');
-            $sort_order = 'ASC';
-            if (strncmp($attribute, '-', 1) === 0) {
-                $sort_order = 'DESC';
-                $attribute = substr($attribute, 1);
-            }
-            $menus->orderBy($attribute, $sort_order);
-        } else {
-            $menus->latest();
-        }
+        $sortDir = request()->input('sort_dir', 'desc');
+        $menus->orderBy('id', $sortDir);
 
         $menus = $menus->paginate(config('admin.paginate.per_page'))
                     ->onEachSide(config('admin.paginate.each_side'))
@@ -45,7 +36,7 @@ class MenuController extends Controller
 
         return Inertia::render('Admin/Menu/Index', [
             'menus' => $menus,
-            'filters' => request()->all('search'),
+            'filters' => request()->all(['search', 'sort_dir']),
             'can' => [
                 'create' => Auth::user()->can('menu create'),
                 'edit' => Auth::user()->can('menu edit'),

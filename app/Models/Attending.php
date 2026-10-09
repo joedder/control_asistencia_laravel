@@ -83,8 +83,15 @@ class Attending extends Model
             
             // Búsqueda global
             ->when($request->filled('search'), function ($q) use ($request) {
-                // Here search could map to group name or teacher name using relations,
-                // but usually the specific filters are enough. We'll leave it empty for now or filter by date string.
+                $search = $request->search;
+                $q->where(function($qW) use ($search) {
+                    $qW->whereHas('teacher', function($qT) use ($search) {
+                        $qT->where('name', 'like', "%{$search}%")
+                           ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhereHas('group', function($qG) use ($search) {
+                        $qG->where('name', 'like', "%{$search}%");
+                    })->orWhere('class_date', 'like', "%{$search}%");
+                });
             });
 
         return $query;

@@ -34,8 +34,15 @@ class GroupController extends Controller
                 ->paginate($perPage)
                 ->withQueryString();
 
+            $teachers = Teacher::pluck('name', 'id')->toArray();
+            $categoryGroups = CategoryGroup::pluck('name', 'id')->toArray();
+            $levels = Level::pluck('name', 'id')->toArray();
+
             return Inertia::render('Admin/Group/Index', [
                 'groups' => $groups,
+                'teachers' => $teachers,
+                'category_groups' => $categoryGroups,
+                'levels' => $levels,
                 'filters'  => $request->only(['search', 'name', 'id_teacher', 'id_category_group', 'id_level']),
                 'can' => [
                     'create' => true,
