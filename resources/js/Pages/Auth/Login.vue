@@ -4,7 +4,7 @@ import { mdiAccount, mdiAsterisk } from '@mdi/js'
 import LayoutGuest from '@/Layouts/Admin/LayoutGuest.vue'
 import SectionFullScreen from '@/Components/SectionFullScreen.vue'
 import CardBox from '@/Components/CardBox.vue'
-import FormCheckRadioGroup from '@/Components/FormCheckRadioGroup.vue'
+
 import FormField from '@/Components/FormField.vue'
 import FormControl from '@/Components/FormControl.vue'
 import BaseDivider from '@/Components/BaseDivider.vue'
@@ -24,19 +24,13 @@ const props = defineProps({
 
 const form = useForm({
   email: '',
-  password: '',
-  remember: []
+  password: ''
 })
 
 const submit = () => {
-  form
-    .transform(data => ({
-      ... data,
-      remember: form.remember && form.remember.length ? 'on' : ''
-    }))
-    .post(route('login'), {
-      onFinish: () => form.reset('password'),
-    })
+  form.post(route('login'), {
+    onFinish: () => form.reset('password'),
+  })
 }
 </script>
 
@@ -92,11 +86,7 @@ const submit = () => {
           />
         </FormField>
 
-        <FormCheckRadioGroup
-          v-model="form.remember"
-          name="remember"
-          :options="{ remember: 'Remember' }"
-        />
+
 
         <BaseDivider />
 
