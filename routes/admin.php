@@ -31,16 +31,7 @@ Route::group([
     Route::resource('menu.item', 'MenuItemController')->except([
         'show',
     ]);
-    Route::group([
-        'prefix' => 'category',
-        'as' => 'category.',
-    ], function () {
-        Route::resource('type', 'CategoryTypeController')->except([
-            'show',
-        ]);
-        Route::resource('type.item', 'CategoryController');
-    });
-    Route::resource('media', 'MediaController');
+
     Route::get('edit-account-info', 'UserController@accountInfo')->name('account.info');
     Route::post('edit-account-info', 'UserController@accountInfoStore')->name('account.info.store');
     Route::post('change-password', 'UserController@changePasswordStore')->name('account.password.store');
