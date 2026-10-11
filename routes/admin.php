@@ -19,6 +19,8 @@ Route::group([
     Route::resource('level', 'LevelController');
     Route::resource('group', 'GroupController');
     Route::resource('student', 'StudentController');
+    Route::get('attending/export-pdf', 'AttendingController@exportReportPdf')->name('attending.export.pdf');
+    Route::get('attending/{attending}/pdf', 'AttendingController@exportSinglePdf')->name('attending.pdf');
     Route::resource('attending', 'AttendingController');
     Route::resource('role', 'RoleController');
     Route::resource('permission', 'PermissionController');

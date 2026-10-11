@@ -2,13 +2,15 @@
 import { Head, Link } from "@inertiajs/vue3"
 import {
   mdiCheckbook,
-  mdiArrowLeftBoldOutline
+  mdiArrowLeftBoldOutline,
+  mdiFilePdfBox
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
 import CardBox from "@/Components/CardBox.vue"
 import BaseButton from '@/Components/BaseButton.vue'
+import BaseIcon from '@/Components/BaseIcon.vue'
 
 const props = defineProps({
   attending: {
@@ -31,14 +33,25 @@ const props = defineProps({
         title="View Attendances (Batch)"
         main
       >
-        <BaseButton
-          :route-name="route('admin.attending.index')"
-          :icon="mdiArrowLeftBoldOutline"
-          label="Back"
-          color="white"
-          rounded-full
-          small
-        />
+        <div class="flex items-center space-x-2">
+          <BaseButton
+            :href="route('admin.attending.pdf', attending.id)"
+            target="_blank"
+            color="danger"
+            :icon="mdiFilePdfBox"
+            label="Descargar PDF"
+            rounded-full
+            small
+          />
+          <BaseButton
+            :route-name="route('admin.attending.index')"
+            :icon="mdiArrowLeftBoldOutline"
+            label="Back"
+            color="white"
+            rounded-full
+            small
+          />
+        </div>
       </SectionTitleLineWithButton>
       <CardBox class="mb-6">
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6 p-4 bg-gray-50 dark:bg-slate-800 rounded">

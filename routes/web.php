@@ -28,7 +28,7 @@ Route::middleware('auth')->group(function () {
         ->name('teacher.')
         // ->middleware('permission:manage-teachers') // Descomenta si usas Spatie Permissions
         ->group(function () {
-            Route::controller(\App\Http\Controllers\TeacherController::class)->group(function () {
+            Route::controller(\App\Http\Controllers\Admin\TeacherController::class)->group(function () {
                 Route::get('/',       'index')  ->name('index');
                 // Route::post('/',      'store')  ->name('store');
                 // Route::put('/{id}',   'update') ->name('update');

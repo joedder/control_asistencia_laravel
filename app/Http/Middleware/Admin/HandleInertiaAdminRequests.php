@@ -42,9 +42,10 @@ class HandleInertiaAdminRequests extends Middleware
 
     protected function getBreadcrumbs(Request $request)
     {
-        if($request->isMethod('get'))
-        {
+        if ($request->isMethod('get') && Breadcrumbs::exists()) {
             return Breadcrumbs::generate();
         }
+
+        return [];
     }
 }

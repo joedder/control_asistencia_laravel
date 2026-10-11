@@ -76,6 +76,14 @@ Breadcrumbs::resource('admin.level', 'Levels');
 Breadcrumbs::resource('admin.group', 'Groups');
 Breadcrumbs::resource('admin.student', 'Students');
 Breadcrumbs::resource('admin.attending', 'Attendings');
+Breadcrumbs::for('admin.attending.export.pdf', function (BreadcrumbTrail $trail) {
+    $trail->parent('admin.attending.index');
+    $trail->push('Export PDF', route('admin.attending.export.pdf'));
+});
+Breadcrumbs::for('admin.attending.pdf', function (BreadcrumbTrail $trail, $attending) {
+    $trail->parent('admin.attending.show', $attending);
+    $trail->push('PDF', route('admin.attending.pdf', $attending));
+});
 Breadcrumbs::resource('admin.history-movement', 'History Movements');
 Breadcrumbs::resource('admin.media', 'Media');
 Breadcrumbs::resource('admin.menu', 'Menu');

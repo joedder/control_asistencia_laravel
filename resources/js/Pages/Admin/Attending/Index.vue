@@ -8,11 +8,13 @@ import {
   mdiTrashCan,
   mdiAlertBoxOutline,
   mdiEye,
+  mdiFilePdfBox,
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
 import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.vue"
 import BaseButton from "@/Components/BaseButton.vue"
+import BaseIcon from "@/Components/BaseIcon.vue"
 import CardBox from "@/Components/CardBox.vue"
 import BaseButtons from "@/Components/BaseButtons.vue"
 import NotificationBar from "@/Components/NotificationBar.vue"
@@ -60,6 +62,16 @@ const submitSearch = () => {
   });
 }
 
+const exportFilteredPdf = () => {
+  const params = new URLSearchParams()
+  if (form.search) params.append('search', form.search)
+  if (form.id_teacher) params.append('id_teacher', form.id_teacher)
+  if (form.id_group) params.append('id_group', form.id_group)
+  if (form.class_date) params.append('class_date', form.class_date)
+  if (form.sort_dir) params.append('sort_dir', form.sort_dir)
+  window.open(`${route('admin.attending.export.pdf')}?${params.toString()}`, '_blank')
+}
+
 const formDelete = useForm({})
 
 function destroy(id) {
@@ -78,15 +90,25 @@ function destroy(id) {
         title="Attendances"
         main
       >
-        <BaseButton
-          v-if="can.create"
-          :route-name="route('admin.attending.create')"
-          :icon="mdiPlus"
-          label="Add"
-          color="info"
-          rounded-full
-          small
-        />
+        <div class="flex items-center space-x-2">
+          <BaseButton
+            :icon="mdiFilePdfBox"
+            label="Exportar Reporte PDF"
+            color="danger"
+            rounded-full
+            small
+            @click="exportFilteredPdf"
+          />
+          <BaseButton
+            v-if="can.create"
+            :route-name="route('admin.attending.create')"
+            :icon="mdiPlus"
+            label="Add"
+            color="info"
+            rounded-full
+            small
+          />
+        </div>
       </SectionTitleLineWithButton>
       
       <NotificationBar
@@ -187,6 +209,13 @@ function destroy(id) {
                 class="before:hidden lg:w-1 whitespace-nowrap"
               >
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
+                  <BaseButton
+                    :href="route('admin.attending.pdf', attending.id)"
+                    target="_blank"
+                    color="danger"
+                    :icon="mdiFilePdfBox"
+                    small
+                  />
                   <BaseButton
                     :route-name="route('admin.attending.show', attending.id)"
                     color="success"

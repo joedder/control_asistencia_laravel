@@ -14,6 +14,9 @@ use Throwable;
 
 use App\Http\Requests\Admin\StoreAttendingRequest;
 use App\Http\Requests\Admin\UpdateAttendingRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class AttendingController extends Controller
 {
@@ -222,5 +225,115 @@ class AttendingController extends Controller
             return redirect()->route('admin.attending.index')
                              ->with('error', 'No se pudo eliminar la asistencia. Intenta de nuevo.');
         }
+    }
+
+    /**
+     * Export a single batch attendance session to PDF.
+     */
+    public function exportSinglePdf(Request $request, Attending $attending)
+    {
+        $group_attendances = Attending::with(['student', 'teacher', 'group', 'user'])
+            ->where('id_group', $attending->id_group)
+            ->whereDate('class_date', $attending->class_date)
+            ->get();
+
+        $total = $group_attendances->count();
+        $presentes = $group_attendances->where('status', 'asistente')->count();
+        $inasistentes = $group_attendances->where('status', 'inasistente')->count();
+        $justificados = $group_attendances->where('status', 'justificado')->count();
+
+        $stats = [
+            'total' => $total,
+            'presentes' => $presentes,
+            'inasistentes' => $inasistentes,
+            'justificados' => $justificados,
+            'pct_presentes' => $total > 0 ? round(($presentes / $total) * 100, 1) : 0,
+            'pct_inasistentes' => $total > 0 ? round(($inasistentes / $total) * 100, 1) : 0,
+            'pct_justificados' => $total > 0 ? round(($justificados / $total) * 100, 1) : 0,
+        ];
+
+        $formattedDate = Carbon::parse($attending->class_date)->format('d/m/Y');
+        $fileDate = Carbon::parse($attending->class_date)->format('Y-m-d');
+        $groupName = Str::slug($attending->group->name ?? 'grupo');
+        $filename = "asistencia_{$groupName}_{$fileDate}.pdf";
+
+        $pdf = Pdf::loadView('reports.attending-single', [
+            'attending' => $attending->load(['teacher', 'group', 'user']),
+            'group_attendances' => $group_attendances,
+            'stats' => $stats,
+            'formattedDate' => $formattedDate,
+        ])->setPaper('a4', 'portrait');
+
+        if ($request->boolean('download')) {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
+    }
+
+    /**
+     * Export general / filtered attendances summary report to PDF.
+     */
+    public function exportReportPdf(Request $request)
+    {
+        $query = Attending::with(['teacher', 'group'])
+            ->selectRaw('MIN(id) as id, id_group, id_teacher, class_date')
+            ->groupBy('id_group', 'id_teacher', 'class_date');
+
+        $groupedSessions = $query
+            ->filter($request)
+            ->orderBy($request->input('sort_by', 'class_date'), $request->input('sort_dir', 'desc'))
+            ->get();
+
+        $sessions = [];
+        foreach ($groupedSessions as $s) {
+            $records = Attending::where('id_group', $s->id_group)
+                ->whereDate('class_date', $s->class_date)
+                ->get();
+            
+            $tot = $records->count();
+            $pres = $records->where('status', 'asistente')->count();
+            $inas = $records->where('status', 'inasistente')->count();
+
+            $sessions[] = [
+                'id' => $s->id,
+                'class_date' => $s->class_date,
+                'group_name' => $s->group->name ?? 'N/A',
+                'teacher_name' => ($s->teacher->name ?? 'N/A') . ' ' . ($s->teacher->last_name ?? ''),
+                'total' => $tot,
+                'presentes' => $pres,
+                'inasistentes' => $inas,
+                'pct' => $tot > 0 ? round(($pres / $tot) * 100, 1) : 0,
+            ];
+        }
+
+        $appliedFilters = [];
+        if ($request->filled('search')) {
+            $appliedFilters[] = "Búsqueda: '{$request->search}'";
+        }
+        if ($request->filled('id_teacher')) {
+            $t = Teacher::find($request->id_teacher);
+            if ($t) $appliedFilters[] = "Docente: {$t->name} {$t->last_name}";
+        }
+        if ($request->filled('id_group')) {
+            $g = Group::find($request->id_group);
+            if ($g) $appliedFilters[] = "Grupo: {$g->name}";
+        }
+        if ($request->filled('class_date')) {
+            $appliedFilters[] = "Fecha: " . Carbon::parse($request->class_date)->format('d/m/Y');
+        }
+
+        $pdf = Pdf::loadView('reports.attending-general', [
+            'sessions' => $sessions,
+            'appliedFilters' => $appliedFilters,
+        ])->setPaper('a4', 'portrait');
+
+        $filename = "reporte_general_asistencias_" . now()->format('Ymd_His') . ".pdf";
+
+        if ($request->boolean('download')) {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
     }
 }
