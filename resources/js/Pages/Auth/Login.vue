@@ -117,11 +117,6 @@ const submit = () => {
               label="Remind"
             />
           </BaseButtons>
-          <Link
-            :href="route('register')"
-          >
-            Register
-          </Link>
         </BaseLevel>
       </CardBox>
     </SectionFullScreen>
