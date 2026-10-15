@@ -31,8 +31,11 @@ class AttendingController extends Controller
 
         try {
             $query = Attending::with(['teacher', 'group'])
-                ->selectRaw('MIN(id) as id, id_group, id_teacher, class_date')
-                ->groupBy('id_group', 'id_teacher', 'class_date');
+                ->with('substituteTeacher')
+                ->selectRaw('MIN(id) as id, session_id, id_group, id_teacher, substitute_teacher_id, class_date, MIN(created_at) as created_at')
+                ->groupBy('session_id', 'id_group', 'id_teacher', 'substitute_teacher_id', 'class_date');
+
+            $this->applyTeacherVisibility($query);
 
             $attendings = $query
                 ->filter($request)
@@ -42,7 +45,9 @@ class AttendingController extends Controller
 
             // Fetch extra info for frontend filters
             $teachers = Teacher::pluck('name', 'id')->toArray();
-            $groups = Group::pluck('name', 'id')->toArray();
+            $groups = $this->canManageAllAttendances()
+                ? Group::pluck('name', 'id')->toArray()
+                : $this->visibleGroupsForTeacher($this->currentTeacher());
 
             return Inertia::render('Admin/Attending/Index', [
                 'attendings' => $attendings,
@@ -59,6 +64,8 @@ class AttendingController extends Controller
                 ]
             ]);
 
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (Throwable $e) {
             report($e);
             return Inertia::render('Admin/Attending/Index', [
@@ -74,8 +81,14 @@ class AttendingController extends Controller
      */
     public function create()
     {
-        $teachers = Teacher::pluck('name', 'id')->toArray();
-        $groups = Group::with('students')->get();
+        $teachers = $this->linkedTeacherOptions();
+        $groupQuery = Group::with('students');
+        if (! $this->canManageAllAttendances()) {
+            $teacher = $this->currentTeacher();
+            abort_unless($teacher, 403);
+            $groupQuery->where('id_teacher', $teacher->id);
+        }
+        $groups = $groupQuery->get();
 
         return Inertia::render('Admin/Attending/Create', [
             'teachers' => $teachers,
@@ -95,12 +108,16 @@ class AttendingController extends Controller
     {
         try {
             $data = $request->validated();
+            $this->ensureCanCreateForGroup((int) $data['id_group']);
             $id_user = Auth::id(); // Assign the current user who is registering this attendance
+            $sessionId = (string) Str::uuid();
             
             foreach ($data['attendances'] as $attendance) {
                 Attending::create([
                     'id_user' => $id_user,
+                    'session_id' => $sessionId,
                     'id_teacher' => $data['id_teacher'],
+                    'substitute_teacher_id' => $data['substitute_teacher_id'] ?? null,
                     'id_group' => $data['id_group'],
                     'class_date' => $data['class_date'],
                     'id_student' => $attendance['id_student'],
@@ -112,6 +129,8 @@ class AttendingController extends Controller
             return redirect()->route('admin.attending.index')
                              ->with('message', 'Attendance created successfully.');
 
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (Throwable $e) {
             report($e);
             
@@ -126,14 +145,14 @@ class AttendingController extends Controller
      */
     public function show(Attending $attending)
     {
-        // Get all attendances for the same group and class_date
+        $this->ensureCanAccess($attending);
+
         $attendances = Attending::with(['student', 'teacher', 'group', 'user'])
-            ->where('id_group', $attending->id_group)
-            ->whereDate('class_date', $attending->class_date)
+            ->where('session_id', $attending->session_id)
             ->get();
 
         return Inertia::render('Admin/Attending/Show', [
-            'attending' => $attending->load(['teacher', 'group']),
+            'attending' => $attending->load(['teacher', 'substituteTeacher', 'group']),
             'group_attendances' => $attendances,
             'can' => [
                 'export_single' => auth()->user()->can('attending export single'),
@@ -146,16 +165,25 @@ class AttendingController extends Controller
      */
     public function edit(Attending $attending)
     {
-        $teachers = Teacher::pluck('name', 'id')->toArray();
-        $groups = Group::with('students')->get();
+        $this->ensureCanAccess($attending);
+        $teachers = $this->linkedTeacherOptions();
+        $groupQuery = Group::with('students');
+        if (! $this->canManageAllAttendances()) {
+            $teacher = $this->currentTeacher();
+            abort_unless($teacher, 403);
+            $groupQuery->where(function ($query) use ($teacher, $attending) {
+                $query->where('id_teacher', $teacher->id)
+                    ->orWhere('id', $attending->id_group);
+            });
+        }
+        $groups = $groupQuery->get();
 
         $attendances = Attending::with('student')
-            ->where('id_group', $attending->id_group)
-            ->whereDate('class_date', $attending->class_date)
+            ->where('session_id', $attending->session_id)
             ->get();
 
         return Inertia::render('Admin/Attending/Edit', [
-            'attending' => $attending,
+            'attending' => $attending->load('substituteTeacher'),
             'group_attendances' => $attendances,
             'teachers' => $teachers,
             'groups' => $groups,
@@ -173,14 +201,24 @@ class AttendingController extends Controller
     public function update(UpdateAttendingRequest $request, Attending $attending)
     {
         try {
+            $this->ensureCanAccess($attending);
             $data = $request->validated();
+            abort_unless((int) $data['id_group'] === (int) $attending->id_group, 403);
             $id_user = Auth::id();
+            $sessionIds = Attending::where('session_id', $attending->session_id)
+                ->pluck('id')
+                ->flip();
 
             foreach ($data['attendances'] as $att_data) {
-                if (isset($att_data['id']) && $att_data['id']) {
-                    Attending::where('id', $att_data['id'])->update([
+                if (! empty($att_data['id'])) {
+                    abort_unless($sessionIds->has((int) $att_data['id']), 403);
+                    Attending::where('id', $att_data['id'])
+                        ->where('session_id', $attending->session_id)
+                        ->update([
                         'id_user' => $id_user,
+                        'session_id' => $attending->session_id,
                         'id_teacher' => $data['id_teacher'],
+                        'substitute_teacher_id' => $data['substitute_teacher_id'] ?? null,
                         'id_group' => $data['id_group'],
                         'class_date' => $data['class_date'],
                         'status' => $att_data['status'],
@@ -189,7 +227,9 @@ class AttendingController extends Controller
                 } else {
                     Attending::create([
                         'id_user' => $id_user,
+                        'session_id' => $attending->session_id,
                         'id_teacher' => $data['id_teacher'],
+                        'substitute_teacher_id' => $data['substitute_teacher_id'] ?? null,
                         'id_group' => $data['id_group'],
                         'class_date' => $data['class_date'],
                         'id_student' => $att_data['id_student'],
@@ -202,6 +242,8 @@ class AttendingController extends Controller
             return redirect()->route('admin.attending.index')
                              ->with('message', 'Attendance updated successfully.');
 
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            throw $e;
         } catch (Throwable $e) {
             report($e);
             
@@ -217,9 +259,7 @@ class AttendingController extends Controller
     public function destroy(Attending $attending)
     {
         try {
-            // Delete all attendances for the same group and date
-            Attending::where('id_group', $attending->id_group)
-                ->whereDate('class_date', $attending->class_date)
+            Attending::where('session_id', $attending->session_id)
                 ->delete();
 
             return redirect()->route('admin.attending.index')
@@ -238,9 +278,10 @@ class AttendingController extends Controller
      */
     public function exportSinglePdf(Request $request, Attending $attending)
     {
+        $this->ensureCanAccess($attending);
+
         $group_attendances = Attending::with(['student', 'teacher', 'group', 'user'])
-            ->where('id_group', $attending->id_group)
-            ->whereDate('class_date', $attending->class_date)
+            ->where('session_id', $attending->session_id)
             ->get();
 
         $total = $group_attendances->count();
@@ -283,8 +324,8 @@ class AttendingController extends Controller
     public function exportReportPdf(Request $request)
     {
         $query = Attending::with(['teacher', 'group'])
-            ->selectRaw('MIN(id) as id, id_group, id_teacher, class_date')
-            ->groupBy('id_group', 'id_teacher', 'class_date');
+            ->selectRaw('MIN(id) as id, session_id, id_group, id_teacher, substitute_teacher_id, class_date, MIN(created_at) as created_at')
+            ->groupBy('session_id', 'id_group', 'id_teacher', 'substitute_teacher_id', 'class_date');
 
         $groupedSessions = $query
             ->filter($request)
@@ -293,8 +334,7 @@ class AttendingController extends Controller
 
         $sessions = [];
         foreach ($groupedSessions as $s) {
-            $records = Attending::where('id_group', $s->id_group)
-                ->whereDate('class_date', $s->class_date)
+            $records = Attending::where('session_id', $s->session_id)
                 ->get();
             
             $tot = $records->count();
@@ -341,5 +381,86 @@ class AttendingController extends Controller
         }
 
         return $pdf->stream($filename);
+    }
+
+    private function canManageAllAttendances(): bool
+    {
+        $user = Auth::user();
+
+        return $user && ($user->hasRole(config('admin.roles.super_admin')) || $user->hasRole('administración'));
+    }
+
+    private function currentTeacher(): ?Teacher
+    {
+        return Teacher::where('id_user', Auth::id())->first();
+    }
+
+    private function applyTeacherVisibility($query): void
+    {
+        if ($this->canManageAllAttendances()) {
+            return;
+        }
+
+        $teacher = $this->currentTeacher();
+        if (! $teacher) {
+            $query->whereRaw('1 = 0');
+            return;
+        }
+
+        $query->where(function ($visible) use ($teacher) {
+            $visible->whereHas('group', fn ($group) => $group->where('id_teacher', $teacher->id))
+                ->orWhere('substitute_teacher_id', $teacher->id)
+                ->orWhere('id_teacher', $teacher->id);
+        });
+    }
+
+    private function ensureCanCreateForGroup(int $groupId): void
+    {
+        if ($this->canManageAllAttendances()) {
+            return;
+        }
+
+        $teacher = $this->currentTeacher();
+        abort_unless($teacher && Group::whereKey($groupId)->where('id_teacher', $teacher->id)->exists(), 403);
+    }
+
+    private function ensureCanAccess(Attending $attending): void
+    {
+        if ($this->canManageAllAttendances()) {
+            return;
+        }
+
+        $teacher = $this->currentTeacher();
+        abort_unless($teacher && (
+            (int) $attending->group()->value('id_teacher') === (int) $teacher->id
+            || (int) $attending->substitute_teacher_id === (int) $teacher->id
+            || (int) $attending->id_teacher === (int) $teacher->id
+        ), 403);
+    }
+
+    private function visibleGroupsForTeacher(?Teacher $teacher): array
+    {
+        if (! $teacher) {
+            return [];
+        }
+
+        return Group::where(function ($query) use ($teacher) {
+            $query->where('id_teacher', $teacher->id)
+                ->orWhereIn('id', Attending::select('id_group')->where('substitute_teacher_id', $teacher->id))
+                ->orWhereIn('id', Attending::select('id_group')->where('id_teacher', $teacher->id));
+        })->pluck('name', 'id')->toArray();
+    }
+
+    private function linkedTeacherOptions(): array
+    {
+        return Teacher::query()
+            ->whereNotNull('id_user')
+            ->orderBy('name')
+            ->orderBy('last_name')
+            ->get(['id', 'name', 'last_name'])
+            ->mapWithKeys(fn (Teacher $teacher) => [
+                $teacher->id => trim($teacher->name.' '.$teacher->last_name),
+            ])
+            ->all();
     }
 }

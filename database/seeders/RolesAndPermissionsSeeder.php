@@ -62,6 +62,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'group list',
             'attending list',
             'attending create',
+            'attending edit',
         ]);
 
         $this->replaceLegacyRole('admin', $administration);

@@ -35,10 +35,8 @@ return new class extends Migration
         Schema::dropIfExists('mediables');
         Schema::dropIfExists('media');
 
-        // 8. Generic category tables (laravel-category) - Note: attendance system uses 'category_groups'
-        Schema::dropIfExists('model_has_categories');
-        Schema::dropIfExists('categories');
-        Schema::dropIfExists('category_types');
+        // Keep laravel-category tables: laravel-admin-core uses them for admin tags
+        // when creating and updating users, roles, permissions and menu items.
 
         Schema::enableForeignKeyConstraints();
 

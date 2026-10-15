@@ -59,7 +59,7 @@ const props = defineProps({
         </div>
       </SectionTitleLineWithButton>
       <CardBox class="mb-6">
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6 p-4 bg-gray-50 dark:bg-slate-800 rounded">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4 mb-6 p-4 bg-gray-50 dark:bg-slate-800 rounded">
           <div>
             <span class="font-bold">Group:</span> {{ attending.group?.name }}
           </div>
@@ -67,7 +67,13 @@ const props = defineProps({
             <span class="font-bold">Teacher:</span> {{ attending.teacher?.name }}
           </div>
           <div>
+            <span class="font-bold">Substitute:</span> {{ attending.substitute_teacher?.name || '—' }}
+          </div>
+          <div>
             <span class="font-bold">Date:</span> {{ new Date(attending.class_date).toLocaleDateString() }}
+          </div>
+          <div>
+            <span class="font-bold">Created:</span> {{ new Date(attending.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
           </div>
         </div>
 

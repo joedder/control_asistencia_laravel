@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from "@inertiajs/vue3"
-import { ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import {
   mdiCheckbook,
   mdiArrowLeftBoldOutline
@@ -37,12 +37,14 @@ const groupOptions = props.groups.reduce((acc, group) => {
 
 const form = useForm({
   id_teacher: '',
+  substitute_teacher_id: '',
   id_group: '',
   class_date: new Date().toISOString().split('T')[0], // Today's date automatically
   attendances: [],
 })
 
 const selectedGroup = ref(null);
+const hasSubstitute = computed(() => Boolean(form.substitute_teacher_id));
 
 watch(() => form.id_group, (newGroupId) => {
   if (newGroupId) {
@@ -89,7 +91,7 @@ watch(() => form.id_group, (newGroupId) => {
         form
         @submit.prevent="form.post(route('admin.attending.store'))"
       >
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
             <FormField
             label="Group"
             :class="{ 'text-red-400': form.errors.id_group }"
@@ -108,7 +110,7 @@ watch(() => form.id_group, (newGroupId) => {
             </FormField>
 
             <FormField
-            label="Teacher"
+            label="Teacher assigned for this date"
             :class="{ 'text-red-400': form.errors.id_teacher }"
             >
             <FormControl
@@ -122,6 +124,22 @@ watch(() => form.id_group, (newGroupId) => {
                 {{ form.errors.id_teacher }}
                 </div>
             </FormControl>
+            <p class="text-xs text-gray-500 mt-1">Teacher responsible for this attendance.</p>
+            </FormField>
+
+            <FormField
+              label="Substitute teacher with access"
+              :class="{ 'text-red-400': form.errors.substitute_teacher_id }"
+            >
+              <FormControl
+                v-model="form.substitute_teacher_id"
+                type="select"
+                :options="props.teachers"
+                placeholder="No substitute"
+                :error="form.errors.substitute_teacher_id"
+              />
+              <p class="text-xs text-gray-500 mt-1">This teacher will be able to view and edit this attendance list. Only teachers with a linked user account are listed.</p>
+              <p v-if="hasSubstitute" class="text-xs text-amber-500 mt-1">The selected teacher will have access to this list.</p>
             </FormField>
 
             <FormField

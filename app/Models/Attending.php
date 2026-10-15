@@ -17,6 +17,8 @@ class Attending extends Model
      */
     protected $fillable = [
         'id_teacher',
+        'substitute_teacher_id',
+        'session_id',
         'id_student',
         'id_group',
         'id_user',
@@ -40,6 +42,11 @@ class Attending extends Model
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class, 'id_teacher');
+    }
+
+    public function substituteTeacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'substitute_teacher_id');
     }
 
     /**

@@ -186,7 +186,9 @@ function destroy(id) {
               <th>N°</th>
               <th>Group</th>
               <th>Teacher</th>
+              <th>Substitute</th>
               <th>Date</th>
+              <th>Time</th>
               <th v-if="can.view || can.edit || can.delete || can.export_single">Actions</th>
             </tr>
           </thead>
@@ -202,8 +204,14 @@ function destroy(id) {
               <td data-label="Teacher">
                 {{ attending.teacher?.name }}
               </td>
+              <td data-label="Substitute">
+                {{ attending.substitute_teacher?.name || '—' }}
+              </td>
               <td data-label="Date">
                 {{ new Date(attending.class_date).toLocaleDateString() }}
+              </td>
+              <td data-label="Time">
+                {{ new Date(attending.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
               </td>
               <td
                 v-if="can.view || can.edit || can.delete || can.export_single"
@@ -242,7 +250,7 @@ function destroy(id) {
               </td>
             </tr>
             <tr v-if="!attendings?.data || attendings.data.length === 0">
-              <td colspan="5" class="text-center py-4">
+              <td colspan="7" class="text-center py-4">
                 No attendances found.
               </td>
             </tr>

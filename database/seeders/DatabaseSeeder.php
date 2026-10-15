@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         Activity::withoutLogs(function () {
             $this->call([
                 RolesAndPermissionsSeeder::class,
+                AdminTagTypeSeeder::class,
                 AdminCoreSeeder::class,
                 TeacherMenuSeeder::class,
                 CategoryGroupMenuSeeder::class,
@@ -24,6 +25,7 @@ class DatabaseSeeder extends Seeder
                 GroupMenuSeeder::class,
                 StudentMenuSeeder::class,
                 AttendingMenuSeeder::class,
+                HistoryMovementMenuSeeder::class,
             ]);
         });
     }

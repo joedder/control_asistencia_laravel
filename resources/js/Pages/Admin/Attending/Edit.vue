@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from "@inertiajs/vue3"
-import { ref, watch, onMounted } from "vue"
+import { computed, ref, watch, onMounted } from "vue"
 import {
   mdiCheckbook,
   mdiArrowLeftBoldOutline
@@ -45,20 +45,20 @@ const groupOptions = props.groups.reduce((acc, group) => {
 
 const form = useForm({
   id_teacher: props.attending.id_teacher || '',
+  substitute_teacher_id: props.attending.substitute_teacher_id || '',
   id_group: props.attending.id_group || '',
   class_date: props.attending.class_date ? props.attending.class_date.split('T')[0] : '',
   attendances: [],
 })
 
 const selectedGroup = ref(null);
+const hasSubstitute = computed(() => Boolean(form.substitute_teacher_id));
 
 const loadAttendances = (groupId) => {
   if (groupId) {
     const group = props.groups.find(g => g.id == groupId);
     if (group) {
       selectedGroup.value = group;
-      form.id_teacher = group.id_teacher || form.id_teacher || '';
-      
       // Use ONLY the students that are in the existing group_attendances
       form.attendances = props.group_attendances.map(att => {
         return {
@@ -110,7 +110,7 @@ onMounted(() => {
         form
         @submit.prevent="form.put(route('admin.attending.update', attending.id))"
       >
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
             <FormField
             label="Group"
             :class="{ 'text-red-400': form.errors.id_group }"
@@ -131,7 +131,7 @@ onMounted(() => {
             </FormField>
 
             <FormField
-            label="Teacher"
+            label="Teacher assigned for this date"
             :class="{ 'text-red-400': form.errors.id_teacher }"
             >
             <FormControl
@@ -145,6 +145,22 @@ onMounted(() => {
                 {{ form.errors.id_teacher }}
                 </div>
             </FormControl>
+            <p class="text-xs text-gray-500 mt-1">Teacher responsible for this attendance.</p>
+            </FormField>
+
+            <FormField
+              label="Substitute teacher with access"
+              :class="{ 'text-red-400': form.errors.substitute_teacher_id }"
+            >
+              <FormControl
+                v-model="form.substitute_teacher_id"
+                type="select"
+                :options="props.teachers"
+                placeholder="No substitute"
+                :error="form.errors.substitute_teacher_id"
+              />
+              <p class="text-xs text-gray-500 mt-1">This teacher will be able to view and edit this attendance list. Only teachers with a linked user account are listed.</p>
+              <p v-if="hasSubstitute" class="text-xs text-amber-500 mt-1">The selected teacher has access to this list.</p>
             </FormField>
 
             <FormField
