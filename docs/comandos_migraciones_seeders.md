@@ -116,3 +116,16 @@ Los seeders que se usan conjuntamente para roles y permisos son `RolesAndPermiss
 | Aplicar migraciones nuevas conservando datos | `php artisan migrate` |
 | Ejecutar todos los seeders | `php artisan db:seed` |
 | Reconstruir la base desde cero y sembrar | `php artisan migrate:fresh --seed` |
+
+
+## Comando a aplicar para tunelizar
+aplicar primero el de laragon luego aplicar el de powershell y cambiar en .env la url generada en el powershell
+
+## comando para aplicar en laragon para hostear el local
+```bash
+php artisan serve --host=127.0.0.1 --port=8000
+```
+## comado para hacer un tunelizacion del proyecto en powershell como admin aplicar este comando
+```bash
+cloudflared tunnel --protocol http2 --url http://127.0.0.1:8000
+```
