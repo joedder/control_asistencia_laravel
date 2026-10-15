@@ -1,74 +1,118 @@
-# Guía de Comandos para Migraciones y Seeders
+# Comandos de desarrollo, compilación y base de datos
 
-Este documento contiene los comandos esenciales para administrar la base de datos de la aplicación, restaurar tablas y ejecutar los seeders, tanto de forma global como individual.
+Esta guía reúne los comandos habituales para trabajar con el Sistema de Control de Asistencia. Ejecútalos desde la carpeta raíz del proyecto.
 
----
+## Requisitos
 
-## 1. Refrescar TODO (Borrón y cuenta nueva)
+- PHP 8.2 o superior y Composer.
+- Node.js y npm.
+- MySQL configurado en `.env`.
 
-Este comando borrará todas las tablas existentes en la base de datos, volverá a ejecutar todas las migraciones desde cero y, finalmente, ejecutará el archivo principal `DatabaseSeeder.php` (el cual llama a todos los seeders registrados).
+En PowerShell de Windows, si `npm` muestra un error de política de ejecución sobre `npm.ps1`, utiliza `npm.cmd` en los comandos indicados.
 
-**⚠️ Advertencia:** Este comando eliminará todos los datos de prueba y registros actuales. Úsalo solo en entornos de desarrollo local.
+## Iniciar el proyecto
+
+### Desarrollo de frontend
+
+Abre una terminal en la carpeta del proyecto y ejecuta:
+
+```bash
+npm run dev
+```
+
+Deja esa terminal abierta. Vite sirve los recursos de Vue y CSS y detecta cambios para desarrollo. En otra terminal ejecuta:
+
+```bash
+php artisan serve
+```
+
+Abre `http://127.0.0.1:8000`. En PowerShell puedes usar `npm.cmd run dev` si `npm run dev` queda bloqueado por la política de scripts.
+
+### Usar recursos compilados
+
+Para ejecutar el sistema sin el servidor de desarrollo de Vite, compila los recursos y luego inicia Laravel:
+
+```bash
+npm run build
+php artisan serve
+```
+
+En PowerShell, el primer comando también puede ejecutarse como `npm.cmd run build`. Laravel servirá los archivos generados en `public/build`. No hace falta mantener `npm run dev` activo.
+
+## Cuándo compilar (`build`)
+
+Ejecuta `npm run build` cuando quieras generar o actualizar los archivos frontend optimizados que utiliza Laravel sin Vite en desarrollo, por ejemplo, para probar el modo compilado o preparar una publicación. Cada vez que cambies componentes Vue, CSS, JavaScript u otros recursos del frontend y quieras ver esos cambios en modo compilado, vuelve a ejecutar el build.
+
+Durante el desarrollo cotidiano, usa `npm run dev`; no necesitas compilar después de cada cambio mientras Vite está ejecutándose. Después de compilar, inicia o reinicia `php artisan serve` si es necesario y recarga el navegador.
+
+## Migraciones
+
+Aplicar solo migraciones pendientes sin borrar datos:
+
+```bash
+php artisan migrate
+```
+
+Consultar el estado de las migraciones:
+
+```bash
+php artisan migrate:status
+```
+
+### Restablecer toda la base de datos
+
+El siguiente comando elimina todas las tablas y datos, vuelve a ejecutar todas las migraciones y luego ejecuta todos los seeders registrados en `DatabaseSeeder`:
 
 ```bash
 php artisan migrate:fresh --seed
 ```
 
----
+**Advertencia:** úsalo solo cuando realmente quieras borrar la base de datos local. No lo ejecutes en una base con información que necesites conservar.
 
-## 2. Correr TODOS los seeders (Sin borrar las tablas)
+## Seeders del proyecto
 
-Si ya tienes tus tablas creadas y solo quieres poblar los datos (y menús) ejecutando el `DatabaseSeeder.php` completo, utiliza:
+El comando para ejecutar todos los seeders registrados es:
 
 ```bash
 php artisan db:seed
 ```
 
----
+`DatabaseSeeder` ejecuta, en este orden, los seeders actuales:
 
-## 3. Ejecutar los seeders de manera individual
+1. `RolesAndPermissionsSeeder`: crea/sincroniza roles y permisos.
+2. `AdminTagTypeSeeder`: registra los tipos de etiquetas administrativos.
+3. `AdminCoreSeeder`: datos base del panel administrativo.
+4. `TeacherMenuSeeder`: menú del módulo de docentes.
+5. `CategoryGroupMenuSeeder`: menú de categorías de grupos.
+6. `LevelMenuSeeder`: menú de niveles.
+7. `GroupMenuSeeder`: menú de grupos.
+8. `StudentMenuSeeder`: menú de estudiantes.
+9. `AttendingMenuSeeder`: menú de asistencias.
+10. `HistoryMovementMenuSeeder`: menú de historial de movimientos.
 
-Si creaste una nueva tabla o módulo y **no quieres borrar los datos existentes**, puedes correr únicamente el seeder específico de ese módulo. 
+Ejecutar un seeder específico, sin volver a sembrar todos los demás:
 
-A continuación, la lista de los seeders individuales que hemos ido creando módulo por módulo:
-
-**Usuarios, Roles, Permisos y Menú Principal (Administrador):**
 ```bash
+php artisan db:seed --class=RolesAndPermissionsSeeder
+php artisan db:seed --class=AdminTagTypeSeeder
 php artisan db:seed --class=AdminCoreSeeder
-```
-
-**Módulo de Profesores (Teachers):**
-```bash
 php artisan db:seed --class=TeacherMenuSeeder
-```
-
-**Módulo de Categorías de Grupo (Category Groups):**
-```bash
 php artisan db:seed --class=CategoryGroupMenuSeeder
-```
-
-**Módulo de Niveles (Levels):**
-```bash
 php artisan db:seed --class=LevelMenuSeeder
-```
-
-**Módulo de Grupos (Groups):**
-```bash
 php artisan db:seed --class=GroupMenuSeeder
-```
-
-**Módulo de Estudiantes (Students):**
-```bash
 php artisan db:seed --class=StudentMenuSeeder
-```
-
-**Módulo de Asistencias (Attendings):**
-```bash
 php artisan db:seed --class=AttendingMenuSeeder
+php artisan db:seed --class=HistoryMovementMenuSeeder
 ```
 
----
+Los seeders que se usan conjuntamente para roles y permisos son `RolesAndPermissionsSeeder` y `AdminCoreSeeder`; para poblar la configuración completa del proyecto, usa `php artisan db:seed`.
 
-## Notas Adicionales
-- Para que estos comandos funcionen correctamente, tu entorno de consola debe estar utilizando la versión de **PHP 8.3** (o superior), tal como lo requiere el framework del proyecto actual.
-- Si solo deseas crear nuevas tablas de migraciones que estén pendientes sin alterar los datos, puedes correr: `php artisan migrate`.
+## Comandos habituales resumidos
+
+| Necesidad | Comandos |
+|---|---|
+| Desarrollar frontend y abrir la aplicación | Terminal 1: `npm run dev`; terminal 2: `php artisan serve` |
+| Ejecutar usando los recursos compilados | `npm run build`; después `php artisan serve` |
+| Aplicar migraciones nuevas conservando datos | `php artisan migrate` |
+| Ejecutar todos los seeders | `php artisan db:seed` |
+| Reconstruir la base desde cero y sembrar | `php artisan migrate:fresh --seed` |
