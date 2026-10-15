@@ -16,8 +16,8 @@ class DatabaseSeeder extends Seeder
     {
         Activity::withoutLogs(function () {
             $this->call([
+                RolesAndPermissionsSeeder::class,
                 AdminCoreSeeder::class,
-                ModulePermissionsSeeder::class,
                 TeacherMenuSeeder::class,
                 CategoryGroupMenuSeeder::class,
                 LevelMenuSeeder::class,

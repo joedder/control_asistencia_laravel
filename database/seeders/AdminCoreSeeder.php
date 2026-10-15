@@ -4,69 +4,16 @@ namespace Database\Seeders;
 
 use BalajiDharma\LaravelMenu\Models\Menu;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 
 class AdminCoreSeeder extends Seeder
 {
     /**
-     * Create the initial roles and permissions.
+     * Create the demo users and the base admin menu.
      *
      * @return void
      */
     public function run()
     {
-        // Reset cached roles and permissions
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // create permissions
-        $permissions = [
-            'admin user',
-            'permission list',
-            'permission create',
-            'permission edit',
-            'permission delete',
-            'role list',
-            'role create',
-            'role edit',
-            'role delete',
-            'user list',
-            'user create',
-            'user edit',
-            'user delete',
-            'menu list',
-            'menu create',
-            'menu edit',
-            'menu delete',
-            'menu.item list',
-            'menu.item create',
-            'menu.item edit',
-            'menu.item delete',
-        ];
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
-        }
-
-        $role1 = Role::firstOrCreate(['name' => 'super-admin']);
-        // gets all permissions via Gate::before rule; see AuthServiceProvider
-
-        $role2 = Role::firstOrCreate(['name' => 'admin']);
-        foreach ($permissions as $permission) {
-            $role2->givePermissionTo($permission);
-        }
-
-        // create roles and assign existing permissions
-        $role3 = Role::firstOrCreate(['name' => 'writer']);
-        $role3->givePermissionTo('admin user');
-        foreach ($permissions as $permission) {
-            if (Str::contains($permission, 'list')) {
-                $role3->givePermissionTo($permission);
-            }
-        }
-
         // create demo users
         $user = \App\Models\User::firstOrCreate(
             ['email' => 'superadmin@example.com'],
@@ -75,7 +22,7 @@ class AdminCoreSeeder extends Seeder
                 'email' => 'superadmin@example.com'
             ])
         );
-        $user->assignRole($role1);
+        $user->syncRoles(config('admin.roles.super_admin'));
 
         $user = \App\Models\User::firstOrCreate(
             ['email' => 'admin@example.com'],
@@ -84,7 +31,7 @@ class AdminCoreSeeder extends Seeder
                 'email' => 'admin@example.com'
             ])
         );
-        $user->assignRole($role2);
+        $user->syncRoles('administración');
 
         $user = \App\Models\User::firstOrCreate(
             ['email' => 'test@example.com'],
@@ -93,7 +40,7 @@ class AdminCoreSeeder extends Seeder
                 'email' => 'test@example.com'
             ])
         );
-        $user->assignRole($role3);
+        $user->syncRoles('docente');
 
         // create menu
         $menu = Menu::firstOrCreate(

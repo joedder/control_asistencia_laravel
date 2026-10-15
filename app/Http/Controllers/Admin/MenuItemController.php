@@ -45,7 +45,7 @@ class MenuItemController extends Controller
     {
         $this->authorize('adminCreate', MenuItem::class);
         $itemOptions = MenuItem::selectOptions($menu->id, null, true);
-        $roles = Role::all()->pluck('name', 'name');
+        $roles = $this->assignableRoles()->pluck('name', 'name');
 
         return Inertia::render('Admin/Menu/Item/Create', compact('menu', 'itemOptions', 'roles'));
     }
@@ -58,6 +58,10 @@ class MenuItemController extends Controller
     public function store(MenuItemCreateData $data, Menu $menu, MenuItemCreateAction $menuItemCreateAction)
     {
         $this->authorize('adminCreate', MenuItem::class);
+        $data->roles = array_values(array_intersect(
+            $data->getRoles() ?? [],
+            $this->assignableRoles()->pluck('name')->all()
+        ));
         $menuItemCreateAction->handle($data, $menu);
 
         return redirect()->route('admin.menu.item.index', $menu->id)
@@ -73,7 +77,7 @@ class MenuItemController extends Controller
     {
         $this->authorize('adminUpdate', $item);
         $itemOptions = MenuItem::selectOptions($menu->id, $item->parent_id ?? $item->id);
-        $roles = Role::all()->pluck('name', 'name');
+        $roles = $this->assignableRoles()->pluck('name', 'name');
         $itemHasRoles = array_column(json_decode($item->roles, true), 'name');
 
         return Inertia::render('Admin/Menu/Item/Edit', compact('menu', 'item', 'itemOptions', 'roles', 'itemHasRoles'));
@@ -87,7 +91,17 @@ class MenuItemController extends Controller
     public function update(MenuItemUpdateData $data, Menu $menu, MenuItem $item, MenuItemUpdateAction $menuItemUpdateAction)
     {
         $this->authorize('adminUpdate', $item);
+        $superAdminRole = config('admin.roles.super_admin');
+        $hasSuperAdminRole = $item->hasRole($superAdminRole);
+        $data->roles = array_values(array_intersect(
+            $data->getRoles() ?? [],
+            $this->assignableRoles()->pluck('name')->all()
+        ));
         $menuItemUpdateAction->handle($data, $item);
+
+        if ($hasSuperAdminRole) {
+            $item->assignRole($superAdminRole);
+        }
 
         return redirect()->route('admin.menu.item.index', $menu->id)
             ->with('message', 'Menu Item updated successfully.');
@@ -106,5 +120,10 @@ class MenuItemController extends Controller
 
         return redirect()->route('admin.menu.item.index', $menu->id)
             ->with('message', __('Menu deleted successfully'));
+    }
+
+    private function assignableRoles()
+    {
+        return Role::query()->where('name', '!=', config('admin.roles.super_admin'));
     }
 }

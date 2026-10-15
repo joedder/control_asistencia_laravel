@@ -23,6 +23,7 @@ class RoleController extends Controller
     {
         $this->authorize('adminViewAny', Role::class);
         $roles = (new Role)->newQuery();
+        $roles->where('name', '!=', config('admin.roles.super_admin'));
 
         if (request()->has('search')) {
             $roles->where('name', 'Like', '%'.request()->input('search').'%');
@@ -83,6 +84,7 @@ class RoleController extends Controller
     public function show(Role $role)
     {
         $this->authorize('adminView', $role);
+        $this->ensureNotSuperAdmin($role);
         $permissions = Permission::all()->pluck('name', 'name');
         $roleHasPermissions = array_column(json_decode($role->permissions, true), 'name');
 
@@ -101,6 +103,7 @@ class RoleController extends Controller
     public function edit(Role $role)
     {
         $this->authorize('adminUpdate', $role);
+        $this->ensureNotSuperAdmin($role);
         $permissions = Permission::all()->pluck('name', 'name');
         $roleHasPermissions = array_column(json_decode($role->permissions, true), 'name');
 
@@ -119,6 +122,7 @@ class RoleController extends Controller
     public function update(RoleUpdateData $data, Role $role, RoleUpdateAction $roleUpdateAction)
     {
         $this->authorize('adminUpdate', $role);
+        $this->ensureNotSuperAdmin($role);
         $roleUpdateAction->handle($data, $role);
 
         return redirect()->route('admin.role.index')
@@ -133,9 +137,15 @@ class RoleController extends Controller
     public function destroy(Role $role)
     {
         $this->authorize('adminDelete', $role);
+        $this->ensureNotSuperAdmin($role);
         $role->delete();
 
         return redirect()->route('admin.role.index')
             ->with('message', __('Role deleted successfully'));
+    }
+
+    private function ensureNotSuperAdmin(Role $role): void
+    {
+        abort_if($role->name === config('admin.roles.super_admin'), 404);
     }
 }

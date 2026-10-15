@@ -45,7 +45,7 @@ class UserController extends Controller
                     ->onEachSide(config('admin.paginate.each_side'))
                     ->appends(request()->query());
 
-        $roles = Role::pluck('name', 'name')->toArray();
+        $roles = $this->assignableRoles()->pluck('name', 'name')->toArray();
 
         return Inertia::render('Admin/User/Index', [
             'users' => $users,
@@ -67,7 +67,7 @@ class UserController extends Controller
     public function create()
     {
         $this->authorize('adminCreate', User::class);
-        $roles = Role::all()->pluck('name', 'name');
+        $roles = $this->assignableRoles()->pluck('name', 'name');
 
         return Inertia::render('Admin/User/Create', [
             'roles' => $roles,
@@ -82,6 +82,10 @@ class UserController extends Controller
     public function store(UserCreateData $data, UserCreateAction $userCreateAction)
     {
         $this->authorize('adminCreate', User::class);
+        $data->roles = array_values(array_intersect(
+            $data->getRoles(),
+            $this->assignableRoles()->pluck('name')->all()
+        ));
         $userCreateAction->handle($data);
 
         return redirect()->route('admin.user.index')
@@ -96,7 +100,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         $this->authorize('adminView', $user);
-        $roles = Role::all()->pluck('name', 'id');
+        $roles = $this->assignableRoles()->pluck('name', 'id');
         $userHasRoles = array_column(json_decode($user->roles, true), 'name');
 
         return Inertia::render('Admin/User/Show', [
@@ -114,7 +118,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $this->authorize('adminUpdate', $user);
-        $roles = Role::all()->pluck('name', 'name');
+        $roles = $this->assignableRoles()->pluck('name', 'name');
         $userHasRoles = array_column(json_decode($user->roles, true), 'name');
 
         return Inertia::render('Admin/User/Edit', [
@@ -132,7 +136,17 @@ class UserController extends Controller
     public function update(UserUpdateData $data, User $user, UserUpdateAction $userUpdateAction)
     {
         $this->authorize('adminUpdate', $user);
+        $superAdminRole = config('admin.roles.super_admin');
+        $isSuperAdmin = $user->hasRole($superAdminRole);
+        $data->roles = array_values(array_intersect(
+            $data->getRoles(),
+            $this->assignableRoles()->pluck('name')->all()
+        ));
         $userUpdateAction->handle($data, $user);
+
+        if ($isSuperAdmin) {
+            $user->assignRole($superAdminRole);
+        }
 
         return redirect()->route('admin.user.index')
             ->with('message', __('User updated successfully.'));
@@ -146,6 +160,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $this->authorize('adminDelete', $user);
+        abort_if($user->hasRole(config('admin.roles.super_admin')), 404);
         $user->delete();
 
         return redirect()->route('admin.user.index')
@@ -226,5 +241,10 @@ class UserController extends Controller
         }
 
         return redirect()->route('admin.account.info')->with('message', __($message));
+    }
+
+    private function assignableRoles()
+    {
+        return Role::query()->where('name', '!=', config('admin.roles.super_admin'));
     }
 }
