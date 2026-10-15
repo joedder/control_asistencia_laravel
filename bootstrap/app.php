@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Trust the local cloudflared proxy so Laravel honors the public HTTPS headers.
+        $middleware->trustProxies(at: '127.0.0.1');
+
         $middleware->alias([
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
