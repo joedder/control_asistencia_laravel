@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Spatie\Activitylog\Facades\Activity;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,14 +14,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $this->call([
-            AdminCoreSeeder::class,
-            TeacherMenuSeeder::class,
-            CategoryGroupMenuSeeder::class,
-            LevelMenuSeeder::class,
-            GroupMenuSeeder::class,
-            StudentMenuSeeder::class,
-            AttendingMenuSeeder::class,
-        ]);
+        Activity::withoutLogs(function () {
+            $this->call([
+                AdminCoreSeeder::class,
+                ModulePermissionsSeeder::class,
+                TeacherMenuSeeder::class,
+                CategoryGroupMenuSeeder::class,
+                LevelMenuSeeder::class,
+                GroupMenuSeeder::class,
+                StudentMenuSeeder::class,
+                AttendingMenuSeeder::class,
+            ]);
+        });
     }
 }

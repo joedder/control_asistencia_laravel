@@ -50,9 +50,12 @@ class AttendingController extends Controller
                 'groups' => $groups,
                 'filters'  => $request->only(['search', 'id_teacher', 'id_group', 'class_date']),
                 'can' => [
-                    'create' => true,
-                    'edit' => true,
-                    'delete' => true,
+                    'view' => auth()->user()->can('attending list'),
+                    'create' => auth()->user()->can('attending create'),
+                    'edit' => auth()->user()->can('attending edit'),
+                    'delete' => auth()->user()->can('attending delete'),
+                    'export' => auth()->user()->can('attending export'),
+                    'export_single' => auth()->user()->can('attending export single'),
                 ]
             ]);
 
@@ -132,6 +135,9 @@ class AttendingController extends Controller
         return Inertia::render('Admin/Attending/Show', [
             'attending' => $attending->load(['teacher', 'group']),
             'group_attendances' => $attendances,
+            'can' => [
+                'export_single' => auth()->user()->can('attending export single'),
+            ],
         ]);
     }
 

@@ -40,9 +40,10 @@ class TeacherController extends Controller
                 'teachers' => $teachers,
                 'filters'  => $request->only(['search', 'name', 'last_name', 'identity_id', 'english_level']),
                 'can' => [
-                    'create' => true,
-                    'edit' => true,
-                    'delete' => true,
+                    'view' => auth()->user()->can('teacher list'),
+                    'create' => auth()->user()->can('teacher create'),
+                    'edit' => auth()->user()->can('teacher edit'),
+                    'delete' => auth()->user()->can('teacher delete'),
                 ]
             ]);
 

@@ -41,7 +41,7 @@ class MenuController extends Controller
                 'create' => Auth::user()->can('menu create'),
                 'edit' => Auth::user()->can('menu edit'),
                 'delete' => Auth::user()->can('menu delete'),
-                'manage' => Auth::user()->can('menu.item index'),
+                'manage' => Auth::user()->can('menu.item list'),
             ],
         ]);
     }

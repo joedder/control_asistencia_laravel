@@ -41,9 +41,10 @@ class HistoryMovementController extends Controller
                 'groups' => $groups,
                 'filters'  => $request->only(['search', 'id_group', 'id_new_group', 'migrated']),
                 'can' => [
-                    'create' => true,
-                    'edit' => true,
-                    'delete' => true,
+                    'view' => auth()->user()->can('history-movement list'),
+                    'create' => auth()->user()->can('history-movement create'),
+                    'edit' => auth()->user()->can('history-movement edit'),
+                    'delete' => auth()->user()->can('history-movement delete'),
                 ]
             ]);
 

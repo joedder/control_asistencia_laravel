@@ -165,7 +165,7 @@ function destroy(id) {
               <th>To Group</th>
               <th>Migrated</th>
               <th>Date</th>
-              <th v-if="can.edit || can.delete">Actions</th>
+              <th v-if="can.view || can.edit || can.delete">Actions</th>
             </tr>
           </thead>
 
@@ -196,7 +196,7 @@ function destroy(id) {
                 {{ new Date(movement.created_at).toLocaleDateString() }}
               </td>
               <td
-                v-if="can.edit || can.delete"
+                v-if="can.view || can.edit || can.delete"
                 class="before:hidden lg:w-1 whitespace-nowrap"
               >
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>

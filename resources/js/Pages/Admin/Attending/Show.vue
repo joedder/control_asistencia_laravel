@@ -20,7 +20,11 @@ const props = defineProps({
   group_attendances: {
     type: Array,
     default: () => ([]),
-  }
+  },
+  can: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 </script>
 
@@ -35,6 +39,7 @@ const props = defineProps({
       >
         <div class="flex items-center space-x-2">
           <BaseButton
+            v-if="can.export_single"
             :href="route('admin.attending.pdf', attending.id)"
             target="_blank"
             color="danger"

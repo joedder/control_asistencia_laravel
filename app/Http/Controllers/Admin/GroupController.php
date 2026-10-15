@@ -45,9 +45,10 @@ class GroupController extends Controller
                 'levels' => $levels,
                 'filters'  => $request->only(['search', 'name', 'id_teacher', 'id_category_group', 'id_level']),
                 'can' => [
-                    'create' => true,
-                    'edit' => true,
-                    'delete' => true,
+                    'view' => auth()->user()->can('group list'),
+                    'create' => auth()->user()->can('group create'),
+                    'edit' => auth()->user()->can('group edit'),
+                    'delete' => auth()->user()->can('group delete'),
                 ]
             ]);
 

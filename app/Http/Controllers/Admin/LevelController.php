@@ -35,9 +35,10 @@ class LevelController extends Controller
                 'levels' => $levels,
                 'filters'  => $request->only(['search', 'name', 'description']),
                 'can' => [
-                    'create' => true,
-                    'edit' => true,
-                    'delete' => true,
+                    'view' => auth()->user()->can('level list'),
+                    'create' => auth()->user()->can('level create'),
+                    'edit' => auth()->user()->can('level edit'),
+                    'delete' => auth()->user()->can('level delete'),
                 ]
             ]);
 

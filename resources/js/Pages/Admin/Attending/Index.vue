@@ -92,6 +92,7 @@ function destroy(id) {
       >
         <div class="flex items-center space-x-2">
           <BaseButton
+            v-if="can.export"
             :icon="mdiFilePdfBox"
             label="Exportar Reporte PDF"
             color="danger"
@@ -186,7 +187,7 @@ function destroy(id) {
               <th>Group</th>
               <th>Teacher</th>
               <th>Date</th>
-              <th v-if="can.edit || can.delete">Actions</th>
+              <th v-if="can.view || can.edit || can.delete || can.export_single">Actions</th>
             </tr>
           </thead>
 
@@ -205,11 +206,12 @@ function destroy(id) {
                 {{ new Date(attending.class_date).toLocaleDateString() }}
               </td>
               <td
-                v-if="can.edit || can.delete"
+                v-if="can.view || can.edit || can.delete || can.export_single"
                 class="before:hidden lg:w-1 whitespace-nowrap"
               >
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
                   <BaseButton
+                    v-if="can.export_single"
                     :href="route('admin.attending.pdf', attending.id)"
                     target="_blank"
                     color="danger"

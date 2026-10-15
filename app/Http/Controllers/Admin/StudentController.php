@@ -39,9 +39,10 @@ class StudentController extends Controller
                 'groups' => $groups,
                 'filters'  => $request->only(['search', 'name', 'last_name', 'identity_id', 'id_group']),
                 'can' => [
-                    'create' => true,
-                    'edit' => true,
-                    'delete' => true,
+                    'view' => auth()->user()->can('student list'),
+                    'create' => auth()->user()->can('student create'),
+                    'edit' => auth()->user()->can('student edit'),
+                    'delete' => auth()->user()->can('student delete'),
                 ]
             ]);
 

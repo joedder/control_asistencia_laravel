@@ -35,9 +35,10 @@ class CategoryGroupController extends Controller
                 'category_groups' => $categoryGroups,
                 'filters'  => $request->only(['search', 'name', 'description']),
                 'can' => [
-                    'create' => true,
-                    'edit' => true,
-                    'delete' => true,
+                    'view' => auth()->user()->can('category-group list'),
+                    'create' => auth()->user()->can('category-group create'),
+                    'edit' => auth()->user()->can('category-group edit'),
+                    'delete' => auth()->user()->can('category-group delete'),
                 ]
             ]);
 

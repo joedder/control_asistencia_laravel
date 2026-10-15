@@ -136,7 +136,7 @@ function destroy(id) {
               <th>Last Name</th>
               <th>Identification</th>
               <th>English Level</th>
-              <th v-if="can.edit || can.delete">Actions</th>
+              <th v-if="can.view || can.edit || can.delete">Actions</th>
             </tr>
           </thead>
 
@@ -158,7 +158,7 @@ function destroy(id) {
                 {{ teacher.english_level }}
               </td>
               <td
-                v-if="can.edit || can.delete"
+                v-if="can.view || can.edit || can.delete"
                 class="before:hidden lg:w-1 whitespace-nowrap"
               >
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>

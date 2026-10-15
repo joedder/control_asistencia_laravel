@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use BalajiDharma\LaravelCategory\Models\CategoryType;
 use BalajiDharma\LaravelMenu\Models\Menu;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -45,36 +44,6 @@ class AdminCoreSeeder extends Seeder
             'menu.item create',
             'menu.item edit',
             'menu.item delete',
-            'category list',
-            'category create',
-            'category edit',
-            'category delete',
-            'category.type list',
-            'category.type create',
-            'category.type edit',
-            'category.type delete',
-            'media list',
-            'media create',
-            'media edit',
-            'media delete',
-            'comment list',
-            'comment create',
-            'comment edit',
-            'comment delete',
-            'thread list',
-            'thread create',
-            'thread edit',
-            'thread delete',
-            'activitylog list',
-            'activitylog delete',
-            'attribute list',
-            'attribute create',
-            'attribute edit',
-            'attribute delete',
-            'reaction list',
-            'reaction create',
-            'reaction edit',
-            'reaction delete',
         ];
 
         foreach ($permissions as $permission) {
@@ -222,6 +191,13 @@ class AdminCoreSeeder extends Seeder
             ],
         ];
 
+        $removedMenuItems = ['Categories', 'Media', 'Forum Threads', 'Comments', 'Activity Logs', 'Attributes', 'Reactions'];
+        $menu->menuItems()->whereIn('name', $removedMenuItems)->delete();
+        $menu_items = array_filter(
+            $menu_items,
+            fn (array $item) => ! in_array($item['name'], $removedMenuItems, true)
+        );
+
         foreach ($menu_items as $item) {
             $menu->menuItems()->updateOrCreate(
                 ['name' => $item['name']],
@@ -229,52 +205,5 @@ class AdminCoreSeeder extends Seeder
             );
         }
 
-        $category_types = [
-            [
-                'name' => 'Category',
-                'machine_name' => 'category',
-                'description' => 'Main Category',
-            ],
-            [
-                'name' => 'Tag',
-                'machine_name' => 'tag',
-                'description' => 'Site Tags',
-                'is_flat' => true,
-            ],
-            [
-                'name' => 'Admin Tag',
-                'machine_name' => 'admin_tag',
-                'description' => 'Admin Tags',
-                'is_flat' => true,
-            ],
-            [
-                'name' => 'Forum Category',
-                'machine_name' => 'forum_category',
-                'description' => 'Forum Category',
-            ],
-            [
-                'name' => 'Forum Tag',
-                'machine_name' => 'forum_tag',
-                'description' => 'Forum Tags',
-                'is_flat' => true,
-            ]
-        ];
-
-        foreach ($category_types as $category_type) {
-            CategoryType::updateOrCreate(
-                ['machine_name' => $category_type['machine_name']],
-                $category_type
-            );
-        }
-
-        $forumCategoryType = CategoryType::firstWhere(['machine_name' => 'forum_category']);
-
-        $forumCategoryType->categories()->updateOrCreate(
-            ['name' => 'General'],
-            [
-                'description' => 'General Forum Category',
-                'name' => 'General'
-            ]
-        );
     }
 }
