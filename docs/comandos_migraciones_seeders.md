@@ -116,6 +116,44 @@ Los seeders que se usan conjuntamente para roles y permisos son `RolesAndPermiss
 | Aplicar migraciones nuevas conservando datos | `php artisan migrate` |
 | Ejecutar todos los seeders | `php artisan db:seed` |
 | Reconstruir la base desde cero y sembrar | `php artisan migrate:fresh --seed` |
+| Actualizar dependencias tras bajar cambios (`git pull`) | `composer install`; `npm install`; `php artisan optimize:clear` |
+
+## Sincronizar cambios del equipo (Git, librerías y dependencias)
+
+Cuando alguien del equipo sube cambios que incluyan nuevas librerías PHP (`composer.json` como DomPDF), librerías de frontend (`package.json`) o migraciones, **las librerías en sí no se suben al repositorio** (las carpetas `vendor/` y `node_modules/` están en `.gitignore` por buenas prácticas).
+
+Para que el proyecto funcione en la máquina de cualquier compañero al bajar cambios, se debe seguir este flujo en su terminal:
+
+1. **Bajar los últimos cambios de la rama:**
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+2. **Instalar dependencias y librerías de PHP:**
+   *(Descarga a la carpeta `vendor/` las librerías nuevas según el archivo `composer.lock`)*
+   ```bash
+   composer install
+   ```
+
+3. **Instalar paquetes nuevos de frontend (si se agregaron):**
+   ```bash
+   npm install
+   ```
+
+4. **Aplicar migraciones pendientes (si hay cambios en la base de datos):**
+   ```bash
+   php artisan migrate
+   ```
+
+5. **Limpiar la caché de Laravel (para que reconozca los nuevos paquetes y proveedores):**
+   ```bash
+   php artisan optimize:clear
+   ```
+
+6. **Iniciar el proyecto en desarrollo:**
+   - Terminal 1: `npm run dev`
+   - Terminal 2: `php artisan serve`
 
 
 ## Comando a aplicar para tunelizar
