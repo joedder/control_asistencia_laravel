@@ -117,6 +117,7 @@ Los seeders que se usan conjuntamente para roles y permisos son `RolesAndPermiss
 | Ejecutar todos los seeders | `php artisan db:seed` |
 | Reconstruir la base desde cero y sembrar | `php artisan migrate:fresh --seed` |
 | Actualizar dependencias tras bajar cambios (`git pull`) | `composer install`; `npm install`; `php artisan optimize:clear` |
+| Pantalla en blanco o carga lenta (túnel expirado) | Vaciar `ASSET_URL=` en `.env` y ejecutar `php artisan config:clear` |
 
 ## Sincronizar cambios del equipo (Git, librerías y dependencias)
 
@@ -155,15 +156,59 @@ Para que el proyecto funcione en la máquina de cualquier compañero al bajar ca
    - Terminal 1: `npm run dev`
    - Terminal 2: `php artisan serve`
 
+---
 
-## Comando a aplicar para tunelizar
-aplicar primero el de laragon luego aplicar el de powershell y cambiar en .env la url generada en el powershell
+## Tunelización (Acceso externo con Cloudflare)
 
-## comando para aplicar en laragon para hostear el local
+Para compartir la aplicación mediante un túnel público temporal:
+
+### 1. Iniciar servidor local en Laragon o terminal:
 ```bash
 php artisan serve --host=127.0.0.1 --port=8000
 ```
-## comado para hacer un tunelizacion del proyecto en powershell como admin aplicar este comando
+
+### 2. Generar el túnel en PowerShell (como administrador):
 ```bash
 cloudflared tunnel --protocol http2 --url http://127.0.0.1:8000
 ```
+Copia la URL pública generada (ej: `https://xxxx.trycloudflare.com`) y colócala en `.env`:
+```env
+ASSET_URL=https://xxxx.trycloudflare.com
+```
+Limpia la caché de configuración:
+```bash
+php artisan config:clear
+```
+
+---
+
+## Solución: Pantalla en blanco o carga muy lenta (20+ segundos en `/favicon.ico`)
+
+### Síntomas:
+- Al abrir `http://127.0.0.1:8000`, la página queda **completamente en blanco**.
+- En la terminal de `php artisan serve` las peticiones tardan **20 a 30 segundos** en responder (por ejemplo en `/` o `/favicon.ico`).
+
+### Causa:
+El túnel de Cloudflare (`cloudflared`) se cerró o expiró, pero en el archivo `.env` la variable `ASSET_URL` sigue apuntando a la URL vieja de `trycloudflare.com`. El navegador queda colgado esperando descargar los archivos JavaScript y CSS (`app.js`, `app.css`) desde un servidor que ya no existe.
+
+### Solución paso a paso:
+
+1. **Abrir el archivo `.env` y vaciar `ASSET_URL`:**
+   ```env
+   ASSET_URL=
+   ```
+   *(O comentar la línea anteponiendo `#`)*.
+
+2. **Limpiar la caché de configuración de Laravel:**
+   ```bash
+   php artisan config:clear
+   ```
+
+3. **Reiniciar el servidor local:**
+   En la terminal donde corre `php artisan serve`, presiona `Ctrl + C` para detenerlo y vuelve a iniciar:
+   ```bash
+   php artisan serve
+   ```
+
+4. **Recargar el navegador:**
+   Presiona `Ctrl + F5` en el navegador para forzar la recarga sin caché previa. La aplicación cargará de inmediato en milisegundos.
