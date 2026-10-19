@@ -33,7 +33,7 @@ class Attending extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'class_date' => 'datetime',
+        'class_date' => 'date:Y-m-d',
     ];
 
     /**
@@ -74,6 +74,34 @@ class Attending extends Model
     }
 
     /**
+     * Normalize a date input to Y-m-d format.
+     */
+    public static function normalizeDate(?string $date): ?string
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        $trimmed = trim($date);
+
+        // DD/MM/YYYY or DD-MM-YYYY
+        if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $trimmed, $m)) {
+            return sprintf('%04d-%02d-%02d', (int) $m[3], (int) $m[2], (int) $m[1]);
+        }
+
+        // YYYY-MM-DD or YYYY/MM/DD
+        if (preg_match('/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/', $trimmed, $m)) {
+            return sprintf('%04d-%02d-%02d', (int) $m[1], (int) $m[2], (int) $m[3]);
+        }
+
+        try {
+            return \Carbon\Carbon::parse($trimmed)->format('Y-m-d');
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
      * Scope a query to apply filters from the request.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -82,11 +110,36 @@ class Attending extends Model
      */
     public function scopeFilter($query, $request)
     {
+        $startDate = static::normalizeDate($request->input('start_date'));
+        $endDate   = static::normalizeDate($request->input('end_date'));
+        $classDate = static::normalizeDate($request->input('class_date'));
+
+        // Filtro por fecha o rango de fechas
+        if (!empty($startDate) && !empty($endDate)) {
+            $from = $startDate;
+            $to = $endDate;
+            if (strtotime($from) > strtotime($to)) {
+                [$from, $to] = [$to, $from];
+            }
+
+            if ($from === $to) {
+                $query->whereDate('class_date', $from);
+            } else {
+                $query->whereDate('class_date', '>=', $from)
+                      ->whereDate('class_date', '<=', $to);
+            }
+        } elseif (!empty($startDate)) {
+            $query->whereDate('class_date', $startDate);
+        } elseif (!empty($endDate)) {
+            $query->whereDate('class_date', $endDate);
+        } elseif (!empty($classDate)) {
+            $query->whereDate('class_date', $classDate);
+        }
+
         $query
             // Filtros de columna
             ->when($request->filled('id_teacher'), fn($q) => $q->where('id_teacher', $request->id_teacher))
             ->when($request->filled('id_group'), fn($q) => $q->where('id_group', $request->id_group))
-            ->when($request->filled('class_date'), fn($q) => $q->whereDate('class_date', $request->class_date))
             
             // Búsqueda global
             ->when($request->filled('search'), function ($q) use ($request) {

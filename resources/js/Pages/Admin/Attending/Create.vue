@@ -35,11 +35,19 @@ const groupOptions = props.groups.reduce((acc, group) => {
   return acc;
 }, {});
 
+const getTodayLocal = () => {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const form = useForm({
   id_teacher: '',
   substitute_teacher_id: '',
   id_group: '',
-  class_date: new Date().toISOString().split('T')[0], // Today's date automatically
+  class_date: getTodayLocal(),
   attendances: [],
 })
 

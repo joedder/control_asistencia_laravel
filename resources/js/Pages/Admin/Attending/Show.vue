@@ -26,6 +26,22 @@ const props = defineProps({
     default: () => ({}),
   },
 })
+
+const formatDate = (value) => {
+  if (!value) return '—'
+  const str = String(value).trim()
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (match) {
+    const [, year, month, day] = match
+    return `${day}/${month}/${year}`
+  }
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return value
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
+}
 </script>
 
 <template>
@@ -70,7 +86,7 @@ const props = defineProps({
             <span class="font-bold">Substitute:</span> {{ attending.substitute_teacher?.name || '—' }}
           </div>
           <div>
-            <span class="font-bold">Date:</span> {{ new Date(attending.class_date).toLocaleDateString() }}
+            <span class="font-bold">Date:</span> {{ formatDate(attending.class_date) }}
           </div>
           <div>
             <span class="font-bold">Created:</span> {{ new Date(attending.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}

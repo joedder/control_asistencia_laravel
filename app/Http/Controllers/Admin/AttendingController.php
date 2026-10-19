@@ -53,7 +53,10 @@ class AttendingController extends Controller
                 'attendings' => $attendings,
                 'teachers' => $teachers,
                 'groups' => $groups,
-                'filters'  => $request->only(['search', 'id_teacher', 'id_group', 'class_date']),
+                'filters'  => array_merge(
+                    $request->only(['search', 'id_teacher', 'id_group', 'start_date', 'end_date', 'class_date']),
+                    ['sort_dir' => $sortDir]
+                ),
                 'can' => [
                     'view' => auth()->user()->can('attending list'),
                     'create' => auth()->user()->can('attending create'),
@@ -70,7 +73,7 @@ class AttendingController extends Controller
             report($e);
             return Inertia::render('Admin/Attending/Index', [
                 'attendings' => null,
-                'filters'  => $request->only(['search']),
+                'filters'  => $request->only(['search', 'id_teacher', 'id_group', 'start_date', 'end_date', 'class_date']),
                 'error'    => 'No se pudieron cargar las asistencias. Intenta de nuevo.',
             ]);
         }
@@ -365,7 +368,22 @@ class AttendingController extends Controller
             $g = Group::find($request->id_group);
             if ($g) $appliedFilters[] = "Grupo: {$g->name}";
         }
-        if ($request->filled('class_date')) {
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $from = $request->start_date;
+            $to = $request->end_date;
+            if (strtotime($from) > strtotime($to)) {
+                [$from, $to] = [$to, $from];
+            }
+            if ($from === $to) {
+                $appliedFilters[] = "Fecha: " . Carbon::parse($from)->format('d/m/Y');
+            } else {
+                $appliedFilters[] = "Rango de fechas: " . Carbon::parse($from)->format('d/m/Y') . " al " . Carbon::parse($to)->format('d/m/Y');
+            }
+        } elseif ($request->filled('start_date')) {
+            $appliedFilters[] = "Fecha: " . Carbon::parse($request->start_date)->format('d/m/Y');
+        } elseif ($request->filled('end_date')) {
+            $appliedFilters[] = "Fecha: " . Carbon::parse($request->end_date)->format('d/m/Y');
+        } elseif ($request->filled('class_date')) {
             $appliedFilters[] = "Fecha: " . Carbon::parse($request->class_date)->format('d/m/Y');
         }
 

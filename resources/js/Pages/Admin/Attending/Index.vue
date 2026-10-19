@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, useForm, router } from "@inertiajs/vue3"
-import { watch } from "vue"
+import { computed, watch } from "vue"
 import {
   mdiCheckbook,
   mdiPlus,
@@ -9,6 +9,8 @@ import {
   mdiAlertBoxOutline,
   mdiEye,
   mdiFilePdfBox,
+  mdiFilter,
+  mdiFilterRemoveOutline,
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
@@ -19,6 +21,7 @@ import CardBox from "@/Components/CardBox.vue"
 import BaseButtons from "@/Components/BaseButtons.vue"
 import NotificationBar from "@/Components/NotificationBar.vue"
 import Pagination from "@/Components/Admin/Pagination.vue"
+import DateInput from "@/Components/DateInput.vue"
 
 const props = defineProps({
   attendings: {
@@ -51,8 +54,20 @@ const form = useForm({
   search: props.filters.search || '',
   id_teacher: props.filters.id_teacher || '',
   id_group: props.filters.id_group || '',
-  class_date: props.filters.class_date || '',
-  sort_dir: new URLSearchParams(window.location.search).get('sort_dir') || 'desc',
+  start_date: props.filters.start_date || props.filters.class_date || '',
+  end_date: props.filters.end_date || '',
+  sort_dir: props.filters.sort_dir || new URLSearchParams(window.location.search).get('sort_dir') || 'desc',
+})
+
+const hasActiveFilters = computed(() => {
+  return Boolean(
+    form.search ||
+    form.id_teacher ||
+    form.id_group ||
+    form.start_date ||
+    form.end_date ||
+    (form.sort_dir && form.sort_dir !== 'desc')
+  )
 })
 
 const submitSearch = () => {
@@ -62,14 +77,41 @@ const submitSearch = () => {
   });
 }
 
+const resetFilters = () => {
+  form.search = ''
+  form.id_teacher = ''
+  form.id_group = ''
+  form.start_date = ''
+  form.end_date = ''
+  form.sort_dir = 'desc'
+  submitSearch()
+}
+
 const exportFilteredPdf = () => {
   const params = new URLSearchParams()
   if (form.search) params.append('search', form.search)
   if (form.id_teacher) params.append('id_teacher', form.id_teacher)
   if (form.id_group) params.append('id_group', form.id_group)
-  if (form.class_date) params.append('class_date', form.class_date)
+  if (form.start_date) params.append('start_date', form.start_date)
+  if (form.end_date) params.append('end_date', form.end_date)
   if (form.sort_dir) params.append('sort_dir', form.sort_dir)
   window.open(`${route('admin.attending.export.pdf')}?${params.toString()}`, '_blank')
+}
+
+const formatDate = (value) => {
+  if (!value) return '—'
+  const str = String(value).trim()
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (match) {
+    const [, year, month, day] = match
+    return `${day}/${month}/${year}`
+  }
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return value
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
 }
 
 const formDelete = useForm({})
@@ -132,7 +174,7 @@ function destroy(id) {
 
       <CardBox class="mb-6">
         <form @submit.prevent="submitSearch">
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 items-end">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 items-end">
             <div>
               <label class="block text-sm font-medium mb-1">Search</label>
               <input type="search" v-model="form.search" placeholder="Search..." class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700" />
@@ -155,8 +197,13 @@ function destroy(id) {
             </div>
 
             <div>
-              <label class="block text-sm font-medium mb-1">Date</label>
-              <input type="date" v-model="form.class_date" class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700" />
+              <label class="block text-sm font-medium mb-1">Fecha Desde</label>
+              <DateInput v-model="form.start_date" placeholder="dd/mm/aaaa" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Fecha Hasta</label>
+              <DateInput v-model="form.end_date" placeholder="dd/mm/aaaa" />
             </div>
 
             <div>
@@ -167,12 +214,22 @@ function destroy(id) {
               </select>
             </div>
 
-            <div>
+            <div class="flex items-center gap-2">
               <BaseButton
+                :icon="mdiFilter"
                 label="Filter"
                 type="submit"
                 color="info"
-                class="w-full"
+                class="flex-1"
+              />
+              <BaseButton
+                v-if="hasActiveFilters"
+                :icon="mdiFilterRemoveOutline"
+                label="Limpiar"
+                type="button"
+                color="whiteDark"
+                outline
+                @click="resetFilters"
               />
             </div>
           </div>
@@ -208,7 +265,7 @@ function destroy(id) {
                 {{ attending.substitute_teacher?.name || '—' }}
               </td>
               <td data-label="Date">
-                {{ new Date(attending.class_date).toLocaleDateString() }}
+                {{ formatDate(attending.class_date) }}
               </td>
               <td data-label="Time">
                 {{ new Date(attending.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
