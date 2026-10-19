@@ -15,6 +15,8 @@ import BaseDivider from '@/Components/BaseDivider.vue'
 import BaseButton from '@/Components/BaseButton.vue'
 import BaseButtons from '@/Components/BaseButtons.vue'
 
+import { onMounted } from "vue"
+
 const props = defineProps({
   roles: {
     type: Object,
@@ -28,6 +30,19 @@ const form = useForm({
   password: '',
   password_confirmation: '',
   roles: []
+})
+
+onMounted(() => {
+  form.name = ''
+  form.email = ''
+  form.password = ''
+  form.password_confirmation = ''
+  setTimeout(() => {
+    form.name = ''
+    form.email = ''
+    form.password = ''
+    form.password_confirmation = ''
+  }, 100)
 })
 </script>
 
@@ -51,8 +66,13 @@ const form = useForm({
       </SectionTitleLineWithButton>
       <CardBox
         form
+        autocomplete="off"
         @submit.prevent="form.post(route('admin.user.store'))"
       >
+        <!-- Dummy inputs to absorb browser autofill -->
+        <input type="text" style="display:none" aria-hidden="true" autocomplete="username">
+        <input type="password" style="display:none" aria-hidden="true" autocomplete="current-password">
+
         <FormField
           label="Name"
           :class="{ 'text-red-400': form.errors.name }"
@@ -60,6 +80,7 @@ const form = useForm({
           <FormControl
             v-model="form.name"
             type="text"
+            autocomplete="off"
             placeholder="Enter Name"
             :error="form.errors.name"
           >
@@ -75,7 +96,8 @@ const form = useForm({
         >
           <FormControl
             v-model="form.email"
-            type="text"
+            type="email"
+            autocomplete="off"
             placeholder="Enter Email"
             :error="form.errors.email"
           >
@@ -92,6 +114,7 @@ const form = useForm({
           <FormControl
             v-model="form.password"
             type="password"
+            autocomplete="new-password"
             placeholder="Enter Password"
             :error="form.errors.password"
           >
@@ -108,6 +131,7 @@ const form = useForm({
           <FormControl
             v-model="form.password_confirmation"
             type="password"
+            autocomplete="new-password"
             placeholder="Enter Password Confirmation"
             :error="form.errors.password"
           >

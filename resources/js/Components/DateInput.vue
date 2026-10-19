@@ -15,6 +15,10 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  error: {
+    type: [String, Boolean],
+    default: null
   }
 })
 
@@ -124,7 +128,10 @@ const onPickerInput = (e) => {
       :placeholder="placeholder"
       :disabled="disabled"
       maxlength="10"
-      class="w-full rounded-md shadow-sm border-gray-300 dark:bg-slate-800 dark:border-slate-700 text-sm pr-9"
+      :class="[
+        'w-full rounded-md shadow-sm text-sm pr-9 dark:bg-slate-800',
+        error ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-gray-300 dark:border-slate-700'
+      ]"
     />
     <div class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-gray-400 dark:text-gray-300">
       <BaseIcon :path="mdiCalendar" size="18" />

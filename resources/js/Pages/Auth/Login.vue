@@ -14,6 +14,8 @@ import FormValidationErrors from '@/Components/FormValidationErrors.vue'
 import NotificationBarInCard from '@/Components/NotificationBarInCard.vue'
 import BaseLevel from '@/Components/BaseLevel.vue'
 
+import { onMounted } from 'vue'
+
 const props = defineProps({
   canResetPassword: Boolean,
   status: {
@@ -25,6 +27,15 @@ const props = defineProps({
 const form = useForm({
   email: '',
   password: ''
+})
+
+onMounted(() => {
+  form.email = ''
+  form.password = ''
+  setTimeout(() => {
+    form.email = ''
+    form.password = ''
+  }, 100)
 })
 
 const submit = () => {
@@ -45,8 +56,13 @@ const submit = () => {
       <CardBox
         :class="cardClass"
         form
+        autocomplete="off"
         @submit.prevent="submit"
       >
+        <!-- Dummy inputs to absorb browser autofill -->
+        <input type="text" style="display:none" aria-hidden="true" autocomplete="username">
+        <input type="password" style="display:none" aria-hidden="true" autocomplete="current-password">
+
         <FormValidationErrors />
 
         <NotificationBarInCard 
@@ -65,7 +81,7 @@ const submit = () => {
             v-model="form.email"
             :icon="mdiAccount"
             id="email"
-            autocomplete="email"
+            autocomplete="off"
             type="email"
             required
           />
@@ -81,7 +97,7 @@ const submit = () => {
             :icon="mdiAsterisk"
             type="password"
             id="password"
-            autocomplete="current-password"
+            autocomplete="new-password"
             required
           />
         </FormField>

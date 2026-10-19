@@ -13,6 +13,7 @@ import FormField from '@/Components/FormField.vue'
 import FormControl from '@/Components/FormControl.vue'
 import BaseButton from '@/Components/BaseButton.vue'
 import BaseButtons from '@/Components/BaseButtons.vue'
+import DateInput from '@/Components/DateInput.vue'
 
 const props = defineProps({
   attending: {
@@ -164,18 +165,17 @@ onMounted(() => {
             </FormField>
 
             <FormField
-            label="Date"
-            :class="{ 'text-red-400': form.errors.class_date }"
+              label="Date"
+              :class="{ 'text-red-400': form.errors.class_date }"
             >
-            <FormControl
+              <DateInput
                 v-model="form.class_date"
-                type="date"
+                placeholder="dd/mm/aaaa"
                 :error="form.errors.class_date"
-            >
-                <div class="text-red-400 text-sm" v-if="form.errors.class_date">
+              />
+              <div class="text-red-400 text-sm mt-1" v-if="form.errors.class_date">
                 {{ form.errors.class_date }}
-                </div>
-            </FormControl>
+              </div>
             </FormField>
         </div>
 
