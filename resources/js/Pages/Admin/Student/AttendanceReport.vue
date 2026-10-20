@@ -11,6 +11,7 @@ import SectionTitleLineWithButton from "@/Components/SectionTitleLineWithButton.
 import BaseButton from "@/Components/BaseButton.vue"
 import CardBox from "@/Components/CardBox.vue"
 import BaseButtons from "@/Components/BaseButtons.vue"
+import StudentAttendanceChart from "@/Components/Charts/StudentAttendanceChart.vue"
 
 defineProps({
   student: { type: Object, required: true },
@@ -80,6 +81,12 @@ const formatDate = (date) => {
         <CardBox class="text-center"><div class="text-2xl font-bold text-red-700">{{ stats.inasistentes }}</div><div class="text-sm uppercase">Inasistencias</div></CardBox>
         <CardBox class="text-center"><div class="text-2xl font-bold text-amber-700">{{ stats.justificados }}</div><div class="text-sm uppercase">Justificadas</div></CardBox>
       </div>
+
+      <CardBox class="mb-6">
+        <h2 class="mb-2 text-lg font-semibold">Distribución de asistencias</h2>
+        <p class="mb-2 text-sm text-slate-500">Porcentaje calculado sobre las sesiones registradas para este estudiante.</p>
+        <StudentAttendanceChart :stats="stats" />
+      </CardBox>
 
       <CardBox has-table>
         <table>
