@@ -62,6 +62,8 @@ Route::group([
         Route::resource('student', 'StudentController')->only(['create', 'store']);
     });
     Route::middleware('permission:student list')->group(function () {
+        Route::get('student/{student}/attendance-report', 'StudentController@attendanceReport')->name('student.attendance-report');
+        Route::get('student/{student}/attendance-report/pdf', 'StudentController@attendanceReportPdf')->name('student.attendance-report.pdf');
         Route::resource('student', 'StudentController')->only(['index', 'show']);
     });
     Route::middleware('permission:student edit')->group(function () {

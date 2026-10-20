@@ -8,6 +8,8 @@ use App\Models\Group;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Throwable;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 use App\Http\Requests\Admin\StoreStudentRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
@@ -98,6 +100,57 @@ class StudentController extends Controller
         return Inertia::render('Admin/Student/Show', [
             'student' => $student,
         ]);
+    }
+
+    /** Show the attendance history and summary for one student. */
+    public function attendanceReport(Student $student)
+    {
+        $report = $this->studentAttendanceData($student);
+
+        return Inertia::render('Admin/Student/AttendanceReport', [
+            'student' => $report['student'],
+            'attendances' => $report['attendances'],
+            'stats' => $report['stats'],
+        ]);
+    }
+
+    /** Stream a printable PDF of one student's attendance history. */
+    public function attendanceReportPdf(Student $student)
+    {
+        $report = $this->studentAttendanceData($student);
+        $filename = 'reporte_asistencia_' . $student->id . '_' . now()->format('Ymd_His') . '.pdf';
+
+        return Pdf::loadView('reports.student-attendance', $report)
+            ->setPaper('a4', 'portrait')
+            ->stream($filename);
+    }
+
+    private function studentAttendanceData(Student $student): array
+    {
+        $student->load('group');
+        $attendances = $student->attendings()
+            ->with(['group', 'teacher', 'substituteTeacher'])
+            ->orderByDesc('class_date')
+            ->orderByDesc('id')
+            ->get();
+
+        $total = $attendances->count();
+        $presentes = $attendances->where('status', 'asistente')->count();
+        $inasistentes = $attendances->where('status', 'inasistente')->count();
+        $justificados = $attendances->where('status', 'justificado')->count();
+
+        return [
+            'student' => $student,
+            'attendances' => $attendances,
+            'stats' => [
+                'total' => $total,
+                'presentes' => $presentes,
+                'inasistentes' => $inasistentes,
+                'justificados' => $justificados,
+                'pct_presentes' => $total > 0 ? round(($presentes / $total) * 100, 1) : 0,
+            ],
+            'generatedAt' => Carbon::now()->format('d/m/Y H:i'),
+        ];
     }
 
     /**

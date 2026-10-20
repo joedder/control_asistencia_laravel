@@ -7,6 +7,7 @@ import {
   mdiTrashCan,
   mdiAlertBoxOutline,
   mdiEye,
+  mdiClipboardTextClockOutline,
 } from "@mdi/js"
 import LayoutAuthenticated from "@/Layouts/Admin/LayoutAuthenticated.vue"
 import SectionMain from "@/Components/SectionMain.vue"
@@ -149,7 +150,7 @@ function destroy(id) {
               <th>Last Name</th>
               <th>Identification</th>
               <th>Group</th>
-              <th v-if="can.view || can.edit || can.delete">Actions</th>
+          <th v-if="can.view || can.edit || can.delete">Actions</th>
             </tr>
           </thead>
 
@@ -175,6 +176,14 @@ function destroy(id) {
                 class="before:hidden lg:w-1 whitespace-nowrap"
               >
                 <BaseButtons type="justify-start lg:justify-end" no-wrap>
+                  <BaseButton
+                    v-if="can.view"
+                    :route-name="route('admin.student.attendance-report', student.id)"
+                    color="warning"
+                    :icon="mdiClipboardTextClockOutline"
+                    small
+                    title="Reporte de asistencias"
+                  />
                   <BaseButton
                     :route-name="route('admin.student.show', student.id)"
                     color="success"

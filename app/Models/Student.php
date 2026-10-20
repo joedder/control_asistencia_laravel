@@ -38,6 +38,12 @@ class Student extends Model
         return $this->hasMany(HistoryMovement::class, 'id_student');
     }
 
+    /** Attendance records for this student across all registered sessions. */
+    public function attendings()
+    {
+        return $this->hasMany(Attending::class, 'id_student');
+    }
+
     /**
      * Scope a query to apply filters from the request.
      *
